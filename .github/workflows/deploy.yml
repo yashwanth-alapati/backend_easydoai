@@ -1,0 +1,65 @@
+name: Build, Test, and Deploy Backend to Elastic Beanstalk
+
+on:
+  push:
+    branches:
+      - main # You can change this to 'develop' to match your example
+
+env:
+  # Python version is the only static variable we need here now
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        # Installs app requirements and tools for testing/linting
+        run: |
+          pip install -r requirements.txt
+          pip install black flake8 pytest coverage coveralls
+
+      - name: Lint with black and flake8
+        # Matches the linting checks from your example
+        run: |
+          black --check .
+          flake8 --max-line-length=88 --ignore=E501,E203 .
+      
+      - name: Run tests with coverage
+        # NOTE: This assumes you use pytest for testing.
+        # If you use a different test runner, you'll need to update this command.
+        run: |
+          coverage run --source='.' -m pytest
+          coverage report -m
+
+      - name: Create ZIP file for deployment
+        # This command now correctly creates the zip file in the root directory.
+        run: zip -r deploy.zip . -x ".git/*" "env/*" "*__pycache__/*" ".DS_Store"
+
+      - name: Deploy to AWS Elastic Beanstalk
+        # This action deploys the zip file to your EB environment
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # These values are now pulled from secrets
+          application_name: ${{ secrets.EB_APP_NAME }}
+          environment_name: ${{ secrets.EB_ENV_NAME }}
+          region: ${{ secrets.AWS_REGION }}
+          version_label: ${{ github.sha }}
+          deployment_package: deploy.zip
+
+      - name: Upload coverage report to Coveralls
+        # This runs after a successful deployment to report code coverage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: coveralls --service=github
