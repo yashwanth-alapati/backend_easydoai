@@ -7,7 +7,6 @@ on:
 
 env:
   PYTHON_VERSION: "3.11"
-  # Define the test database URL here for the test job
   TEST_DATABASE_URL: postgresql://testuser:testpassword@localhost:5433/testdb
 
 jobs:
@@ -27,7 +26,8 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Start test database
-        run: docker-compose -f docker-compose.test.yml up -d
+        # Use the modern 'docker compose' command
+        run: docker compose -f docker-compose.test.yml up -d
 
       - name: Lint with black and flake8
         run: |
@@ -35,19 +35,17 @@ jobs:
           flake8 --max-line-length=88 --ignore=E501,E203,W503 --exclude=env .
 
       - name: Run tests with coverage
-        # The DATABASE_URL env var is set here, pointing to the Docker container
         env:
           DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
         run: |
-          # Apply migrations to the fresh test database before running tests
           alembic upgrade head
           coverage run --source='.' -m pytest
           coverage report -m
 
       - name: Stop test database
-        # This step will run even if the tests fail, ensuring cleanup
         if: always()
-        run: docker-compose -f docker-compose.test.yml down
+        # Use the modern 'docker compose' command
+        run: docker compose -f docker-compose.test.yml down
 
       - name: Create ZIP file for deployment
         run: zip -r deploy.zip . -x ".git/*" "env/*" "*__pycache__/*" ".DS_Store" "tests/*" "docker-compose.test.yml"
@@ -80,7 +78,7 @@ jobs:
           echo "Environment update complete."
 
       - name: Upload coverage report to Coveralls
-        if: success() # Only run if tests succeed
+        if: success()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: coveralls --service=github 
+        run: coveralls --service=github
