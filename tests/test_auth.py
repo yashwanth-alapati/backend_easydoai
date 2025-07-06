@@ -5,6 +5,7 @@ import pytest
 # The TestClient allows you to send HTTP requests to your FastAPI app from your tests.
 client = TestClient(app)
 
+
 # Use pytest.mark.dependency to create dependencies between tests
 # The login test will only run if the signup test passes.
 @pytest.mark.dependency()
@@ -52,4 +53,4 @@ def test_failed_login():
         json={"email": "testuser@example.com", "password": "wrongpassword"},
     )
     assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid credentials" 
+    assert response.json()["detail"] == "Invalid credentials"
