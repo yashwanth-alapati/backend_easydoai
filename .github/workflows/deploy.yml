@@ -23,10 +23,8 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
-        # Installs app requirements and tools for testing/linting
-        run: |
-          pip install -r requirements.txt
-          pip install black flake8 pytest coverage coveralls
+        # Installs all app and dev requirements from the single requirements file
+        run: pip install -r requirements.txt
 
       - name: Lint with black and flake8
         # Matches the linting checks from your example
