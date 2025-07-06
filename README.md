@@ -1,1 +1,1 @@
-# easydo_backend code that is hosted on AWS Elastic beanstalk env
+# easydo_backend code that is hosted on AWS Elastic beanstalk environment
