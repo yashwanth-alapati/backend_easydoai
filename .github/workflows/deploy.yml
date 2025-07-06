@@ -37,6 +37,7 @@ jobs:
       - name: Run tests with coverage
         env:
           DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
+          ANTHROPIC_API_KEY: "test-key-for-pytest"
         run: |
           alembic upgrade head
           coverage run --source='.' -m pytest
