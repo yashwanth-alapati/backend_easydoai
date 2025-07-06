@@ -1,7 +1,7 @@
 """Create initial database schema
 
 Revision ID: 39f40257a886
-Revises: 
+Revises:
 Create Date: 2025-07-06 16:17:19.168603
 
 """
