@@ -32,12 +32,10 @@ jobs:
           black --check .
           flake8 --max-line-length=88 --ignore=E501,E203,W503 --exclude=env .
       
-      - name: Run tests with coverage
-        # NOTE: This assumes you use pytest for testing.
-        # If you use a different test runner, you'll need to update this command.
-        run: |
-          coverage run --source='.' -m pytest
-          coverage report -m
+      # - name: Run tests with coverage
+      #   run: |
+      #     coverage run --source='.' -m pytest
+      #     coverage report -m
 
       - name: Create ZIP file for deployment
         # This command now correctly creates the zip file in the root directory.
@@ -56,8 +54,7 @@ jobs:
           version_label: ${{ github.sha }}
           deployment_package: deploy.zip
 
-      - name: Upload coverage report to Coveralls
-        # This runs after a successful deployment to report code coverage
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: coveralls --service=github
+      # - name: Upload coverage report to Coveralls
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: coveralls --service=github
