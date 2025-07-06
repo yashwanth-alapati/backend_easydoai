@@ -9,6 +9,7 @@ import sys
 
 load_dotenv()  # Load environment variables from .env
 
+
 class GmailMCPClient:
     def __init__(self):
         self.session: Optional[ClientSession] = None
@@ -19,45 +20,52 @@ class GmailMCPClient:
         """Connect to the Gmail AutoAuth MCP server."""
         # Use npx to launch the Gmail MCP server
         server_params = StdioServerParameters(
-            command="npx",
-            args=["@gongrzhe/server-gmail-autoauth-mcp"],
-            env=None
+            command="npx", args=["@gongrzhe/server-gmail-autoauth-mcp"], env=None
         )
-        stdio_transport = await self.exit_stack.enter_async_context(stdio_client(server_params))
+        stdio_transport = await self.exit_stack.enter_async_context(
+            stdio_client(server_params)
+        )
         self.stdio, self.write = stdio_transport
-        self.session = await self.exit_stack.enter_async_context(ClientSession(self.stdio, self.write))
+        self.session = await self.exit_stack.enter_async_context(
+            ClientSession(self.stdio, self.write)
+        )
         await self.session.initialize()
 
         # List available tools
         response = await self.session.list_tools()
         tools = response.tools
-        print("\nConnected to Gmail MCP server with tools:", [tool.name for tool in tools])
+        print(
+            "\nConnected to Gmail MCP server with tools:", [tool.name for tool in tools]
+        )
 
     async def process_query(self, query: str) -> str:
         """Process a query using Claude and available Gmail tools."""
         messages = [{"role": "user", "content": query}]
         response = await self.session.list_tools()
-        available_tools = [{
-            "name": tool.name,
-            "description": tool.description,
-            "input_schema": tool.inputSchema
-        } for tool in response.tools]
+        available_tools = [
+            {
+                "name": tool.name,
+                "description": tool.description,
+                "input_schema": tool.inputSchema,
+            }
+            for tool in response.tools
+        ]
 
         # Initial Claude API call
         response = self.anthropic.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=1000,
             messages=messages,
-            tools=available_tools
+            tools=available_tools,
         )
 
         tool_results = []
         final_text = []
 
         for content in response.content:
-            if content.type == 'text':
+            if content.type == "text":
                 final_text.append(content.text)
-            elif content.type == 'tool_use':
+            elif content.type == "tool_use":
                 tool_name = content.name
                 tool_args = content.input
                 # Execute Gmail tool call
@@ -66,15 +74,9 @@ class GmailMCPClient:
                 final_text.append(f"[Calling tool {tool_name} with args {tool_args}]")
 
                 # Continue conversation with tool results
-                if hasattr(content, 'text') and content.text:
-                    messages.append({
-                        "role": "assistant",
-                        "content": content.text
-                    })
-                messages.append({
-                    "role": "user",
-                    "content": result.content
-                })
+                if hasattr(content, "text") and content.text:
+                    messages.append({"role": "assistant", "content": content.text})
+                messages.append({"role": "user", "content": result.content})
 
                 # Get next response from Claude
                 response = self.anthropic.messages.create(
@@ -94,7 +96,7 @@ class GmailMCPClient:
         while True:
             try:
                 query = input("\nQuery: ").strip()
-                if query.lower() == 'quit':
+                if query.lower() == "quit":
                     break
                 response = await self.process_query(query)
                 print("\n" + response)
@@ -105,6 +107,7 @@ class GmailMCPClient:
         """Clean up resources."""
         await self.exit_stack.aclose()
 
+
 async def main():
     client = GmailMCPClient()
     try:
@@ -112,6 +115,7 @@ async def main():
         await client.chat_loop()
     finally:
         await client.cleanup()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

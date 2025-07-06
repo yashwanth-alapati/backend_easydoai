@@ -20,17 +20,18 @@ from dateutil import parser
 import pytz
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s"
+    level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s"
 )
 load_dotenv()
-logger = logging.getLogger('easydoai.agent')
+logger = logging.getLogger("easydoai.agent")
 logger.setLevel(logging.INFO)
+
 
 class AgentState(TypedDict):
     messages: Sequence[BaseMessage]
     next_action: str
     tool_results: List[Any]
+
 
 class EasydoAgent:
     """Main agent using LangGraph for easydo.ai"""
@@ -40,7 +41,7 @@ class EasydoAgent:
         self.llm = ChatAnthropic(
             model="claude-3-opus-20240229",
             temperature=0.7,
-            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY")
+            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
         )
         logger.info("Loaded Claude model for LLM.")
         self.tools = get_tools()
@@ -59,9 +60,7 @@ class EasydoAgent:
         workflow.add_node("final", self._final_node)
         workflow.set_entry_point("agent")
         workflow.add_conditional_edges(
-            "agent",
-            self._should_use_tools,
-            {"tools": "tools", "final": "final"}
+            "agent", self._should_use_tools, {"tools": "tools", "final": "final"}
         )
         workflow.add_edge("tools", "agent")
         workflow.add_edge("final", END)
@@ -73,20 +72,24 @@ class EasydoAgent:
         messages = state["messages"]
         if not messages or not isinstance(messages[0], SystemMessage):
             current_date = datetime.now().strftime("%B %d, %Y")
-            system_message = SystemMessage(content=f"You are easydo.ai, an agentic productivity assistant. Today's date is {current_date}.")
+            system_message = SystemMessage(
+                content=f"You are easydo.ai, an agentic productivity assistant. Today's date is {current_date}."
+            )
             messages = [system_message] + list(messages)
             logger.info("Added system message to conversation.")
         logger.info(f"Messages to LLM: {[m.content for m in messages]}")
         response = self.llm_with_tools.invoke(messages)
         logger.info(f"LLM response: {getattr(response, 'content', str(response))}")
-        has_tool_calls = hasattr(response, 'tool_calls') and response.tool_calls
+        has_tool_calls = hasattr(response, "tool_calls") and response.tool_calls
         if has_tool_calls:
-            logger.info(f"LLM requested tool calls: {[tc['name'] for tc in response.tool_calls]}")
+            logger.info(
+                f"LLM requested tool calls: {[tc['name'] for tc in response.tool_calls]}"
+            )
         else:
             logger.info("LLM did not request any tool calls.")
         return {
             "messages": messages + [response],
-            "next_action": "tools" if has_tool_calls else "final"
+            "next_action": "tools" if has_tool_calls else "final",
         }
 
     def _ensure_iso_with_tz(self, dt_str, tz_str):
@@ -98,7 +101,9 @@ class EasydoAgent:
                 dt = tz.localize(dt)
             return dt.isoformat()
         except Exception as e:
-            logger.warning(f"Could not parse or localize datetime '{dt_str}' with tz '{tz_str}': {e}")
+            logger.warning(
+                f"Could not parse or localize datetime '{dt_str}' with tz '{tz_str}': {e}"
+            )
             return dt_str  # fallback to original
 
     def _tools_node(self, state: AgentState) -> Dict[str, Any]:
@@ -106,19 +111,26 @@ class EasydoAgent:
         messages = state["messages"]
         last_message = messages[-1]
         tool_messages = []
-        if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+        if hasattr(last_message, "tool_calls") and last_message.tool_calls:
             for tool_call in last_message.tool_calls:
                 tool_name = tool_call["name"]
                 tool_args = tool_call["args"]
                 tool_call_id = tool_call["id"]
                 logger.info(f"Processing tool call: {tool_name} with args: {tool_args}")
                 # --- PATCH: Fix Google Calendar datetime strings if needed ---
-                if tool_name == "google_calendar_mcp" and tool_args.get("tool") == "create-event":
+                if (
+                    tool_name == "google_calendar_mcp"
+                    and tool_args.get("tool") == "create-event"
+                ):
                     args = tool_args.get("args", {})
                     tz = args.get("timeZone", "America/New_York")
                     for key in ["start", "end"]:
                         val = args.get(key)
-                        if isinstance(val, str) and "T" in val and ("Z" not in val and "+" not in val and "-" not in val):
+                        if (
+                            isinstance(val, str)
+                            and "T" in val
+                            and ("Z" not in val and "+" not in val and "-" not in val)
+                        ):
                             args[key] = self._ensure_iso_with_tz(val, tz)
                     tool_args["args"] = args
                 # -----------------------------------------------------------
@@ -126,15 +138,21 @@ class EasydoAgent:
                     tool = self.tools_by_name[tool_name]
                     try:
                         result = tool.func(**tool_args)
-                        logger.info(f"Tool '{tool_name}' executed successfully. Result: {result}")
+                        logger.info(
+                            f"Tool '{tool_name}' executed successfully. Result: {result}"
+                        )
+
                         def json_encoder(obj):
                             if isinstance(obj, (datetime, date)):
                                 return obj.isoformat()
-                            raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+                            raise TypeError(
+                                f"Object of type {type(obj)} is not JSON serializable"
+                            )
+
                         tool_message = ToolMessage(
                             content=json.dumps(result, default=json_encoder),
                             tool_call_id=tool_call_id,
-                            name=tool_name
+                            name=tool_name,
                         )
                         tool_messages.append(tool_message)
                     except Exception as e:
@@ -142,7 +160,7 @@ class EasydoAgent:
                         tool_message = ToolMessage(
                             content=json.dumps({"error": str(e)}),
                             tool_call_id=tool_call_id,
-                            name=tool_name
+                            name=tool_name,
                         )
                         tool_messages.append(tool_message)
                 else:
@@ -150,35 +168,32 @@ class EasydoAgent:
                     tool_message = ToolMessage(
                         content=json.dumps({"error": "Tool not found"}),
                         tool_call_id=tool_call_id,
-                        name=tool_name
+                        name=tool_name,
                     )
                     tool_messages.append(tool_message)
         else:
             logger.info("No tool calls to process in tools node.")
-        return {
-            "messages": messages + tool_messages,
-            "tool_results": []
-        }
+        return {"messages": messages + tool_messages, "tool_results": []}
 
     def _final_node(self, state: AgentState) -> Dict[str, Any]:
         logger.info("Entering final node.")
         return state
 
     def _should_use_tools(self, state: AgentState) -> str:
-        logger.info(f"Deciding next action based on state: {state.get('next_action', 'final')}")
+        logger.info(
+            f"Deciding next action based on state: {state.get('next_action', 'final')}"
+        )
         return state.get("next_action", "final")
 
-    async def process_message(self, user_input: str, conversation_history: List[BaseMessage] = None) -> str:
+    async def process_message(
+        self, user_input: str, conversation_history: List[BaseMessage] = None
+    ) -> str:
         logger.info(f"Processing user message: {user_input}")
         if conversation_history is None:
             conversation_history = []
         messages = conversation_history + [HumanMessage(content=user_input)]
         logger.info(f"Initial state for graph: {messages}")
-        initial_state = {
-            "messages": messages,
-            "tool_results": [],
-            "next_action": ""
-        }
+        initial_state = {"messages": messages, "tool_results": [], "next_action": ""}
         final_state = await self.graph.ainvoke(initial_state)
         logger.info(f"Final state after graph execution: {final_state}")
         for message in reversed(final_state["messages"]):

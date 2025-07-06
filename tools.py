@@ -10,6 +10,7 @@ from langchain.tools import Tool
 
 AVAILABLE_TOOLS_DIR = "available_tools"
 
+
 def get_tools() -> List[Tool]:
     """
     Dynamically load all tools from the available_tools directory.

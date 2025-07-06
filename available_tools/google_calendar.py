@@ -8,26 +8,36 @@ from mcp.client.stdio import stdio_client
 import json
 import os
 
+
 class GoogleCalendarMCPInput(BaseModel):
-    tool: str = Field(description="The Google Calendar MCP tool to call, e.g. 'create-event', 'list-events', etc.")
-    args: Dict[str, Any] = Field(description="Arguments for the Google Calendar MCP tool.")
+    tool: str = Field(
+        description="The Google Calendar MCP tool to call, e.g. 'create-event', 'list-events', etc."
+    )
+    args: Dict[str, Any] = Field(
+        description="Arguments for the Google Calendar MCP tool."
+    )
+
 
 def google_calendar_mcp_func(tool: str, args: Dict[str, Any]) -> Any:
     async def run():
         async with AsyncExitStack() as stack:
             script_dir = os.path.dirname(os.path.realpath(__file__))
             # Construct the absolute path to the credentials file
-            credentials_path = os.path.abspath(os.path.join(script_dir, "..", "..", "google-calendar-mcp", "gcp-oauth.keys.json"))
-            
+            credentials_path = os.path.abspath(
+                os.path.join(
+                    script_dir, "..", "..", "google-calendar-mcp", "gcp-oauth.keys.json"
+                )
+            )
+
             server_params = StdioServerParameters(
                 command="npx",
                 args=["@cocal/google-calendar-mcp"],
                 # Pass the absolute path as an environment variable to the tool
-                env={
-                    "GOOGLE_OAUTH_CREDENTIALS": credentials_path
-                }
+                env={"GOOGLE_OAUTH_CREDENTIALS": credentials_path},
             )
-            stdio_transport = await stack.enter_async_context(stdio_client(server_params))
+            stdio_transport = await stack.enter_async_context(
+                stdio_client(server_params)
+            )
             stdio, write = stdio_transport
             session = await stack.enter_async_context(ClientSession(stdio, write))
             await session.initialize()
@@ -40,7 +50,9 @@ def google_calendar_mcp_func(tool: str, args: Dict[str, Any]) -> Any:
                     )
                 return getattr(result.content, "text", str(result.content))
             return str(result)
+
     return asyncio.run(run())
+
 
 # ---- TOOL DEFINITIONS FOR PROMPT ----
 
@@ -48,7 +60,7 @@ GOOGLE_CALENDAR_MCP_TOOLS = [
     {
         "name": "list-calendars",
         "description": "List all available calendars.",
-        "args": {}
+        "args": {},
     },
     {
         "name": "list-events",
@@ -56,8 +68,8 @@ GOOGLE_CALENDAR_MCP_TOOLS = [
         "args": {
             "calendarId": "string or array of strings (use 'primary' for main calendar)",
             "timeMin": "ISO datetime string (optional)",
-            "timeMax": "ISO datetime string (optional)"
-        }
+            "timeMax": "ISO datetime string (optional)",
+        },
     },
     {
         "name": "search-events",
@@ -66,13 +78,13 @@ GOOGLE_CALENDAR_MCP_TOOLS = [
             "calendarId": "string (use 'primary' for main calendar)",
             "query": "string (free text search)",
             "timeMin": "ISO datetime string (optional)",
-            "timeMax": "ISO datetime string (optional)"
-        }
+            "timeMax": "ISO datetime string (optional)",
+        },
     },
     {
         "name": "list-colors",
         "description": "List available color IDs and their meanings for calendar events.",
-        "args": {}
+        "args": {},
     },
     {
         "name": "create-event",
@@ -88,8 +100,8 @@ GOOGLE_CALENDAR_MCP_TOOLS = [
             "attendees": "array of {email: string} (optional)",
             "colorId": "string (optional, see list-colors)",
             "reminders": "object (optional, see below)",
-            "recurrence": "array of strings (optional, RFC5545 format)"
-        }
+            "recurrence": "array of strings (optional, RFC5545 format)",
+        },
     },
     {
         "name": "update-event",
@@ -109,16 +121,13 @@ GOOGLE_CALENDAR_MCP_TOOLS = [
             "recurrence": "array of strings (optional, new recurrence rules)",
             "modificationScope": "string (optional, 'single', 'all', or 'future')",
             "originalStartTime": "ISO datetime string (required if modificationScope is 'single')",
-            "futureStartDate": "ISO datetime string (required if modificationScope is 'future')"
-        }
+            "futureStartDate": "ISO datetime string (required if modificationScope is 'future')",
+        },
     },
     {
         "name": "delete-event",
         "description": "Delete a calendar event.",
-        "args": {
-            "calendarId": "string",
-            "eventId": "string"
-        }
+        "args": {"calendarId": "string", "eventId": "string"},
     },
     {
         "name": "get-freebusy",
@@ -129,10 +138,11 @@ GOOGLE_CALENDAR_MCP_TOOLS = [
             "timeZone": "string (optional, IANA timezone)",
             "groupExpansionMax": "integer (optional, max group expansion)",
             "calendarExpansionMax": "integer (optional, max calendar expansion)",
-            "items": "array of {id: string} (calendar or group identifiers)"
-        }
-    }
+            "items": "array of {id: string} (calendar or group identifiers)",
+        },
+    },
 ]
+
 
 def build_tools_prompt(tools):
     return "\n".join(
@@ -140,18 +150,21 @@ def build_tools_prompt(tools):
         for tool in tools
     )
 
+
 GOOGLE_CALENDAR_SYSTEM_PROMPT = (
     "You have access to the following Google Calendar MCP tools:\n"
     f"{build_tools_prompt(GOOGLE_CALENDAR_MCP_TOOLS)}\n"
     "When calling a tool, use the exact argument names and types as shown above."
 )
 
+
 def get_tool() -> Tool:
     return Tool(
         name="google_calendar_mcp",
         description=GOOGLE_CALENDAR_SYSTEM_PROMPT,
         func=google_calendar_mcp_func,
-        args_schema=GoogleCalendarMCPInput
+        args_schema=GoogleCalendarMCPInput,
     )
+
 
 # You can now use GOOGLE_CALENDAR_SYSTEM_PROMPT as your system prompt for the LLM.

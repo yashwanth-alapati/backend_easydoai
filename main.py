@@ -25,19 +25,24 @@ app.add_middleware(
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 class SignupRequest(BaseModel):
     email: EmailStr
     password: str
+
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
+
 class AgentTaskRequest(BaseModel):
     title: str
 
+
 class ChatRequest(BaseModel):
     message: str
+
 
 def get_db():
     db = database.SessionLocal()
@@ -46,6 +51,7 @@ def get_db():
     finally:
         db.close()
 
+
 @app.on_event("startup")
 def on_startup():
     try:
@@ -53,6 +59,7 @@ def on_startup():
         print(">>> Tables creation attempted")
     except Exception as e:
         print(">>> Table creation error:", e)
+
 
 @app.post("/signup")
 def signup(req: SignupRequest, db: Session = Depends(get_db)):
@@ -66,6 +73,7 @@ def signup(req: SignupRequest, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return {"message": "Signup successful"}
 
+
 @app.post("/login")
 def login(req: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == req.email).first()
@@ -73,7 +81,9 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return {"message": "Login successful"}
 
+
 from fastapi import Query
+
 
 @app.get("/tasks")
 def list_tasks(email: str = Query(None), db: Session = Depends(get_db)):
@@ -91,19 +101,27 @@ def list_tasks(email: str = Query(None), db: Session = Depends(get_db)):
             "status": t.status,
             "messages": json.loads(t.messages) if t.messages else [],
             "user_id": t.user_id,
-            "created_at": t.created_at.isoformat() if t.created_at else None
+            "created_at": t.created_at.isoformat() if t.created_at else None,
         }
         for t in tasks
     ]
+
+
 from fastapi import FastAPI, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 import json
+
+
 class TaskMessageRequest(BaseModel):
     message: str
     email: EmailStr
+
+
 @app.post("/tasks")
-async def create_task_with_message(req: TaskMessageRequest, db: Session = Depends(get_db)):
+async def create_task_with_message(
+    req: TaskMessageRequest, db: Session = Depends(get_db)
+):
     user = db.query(User).filter(User.email == req.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -111,13 +129,13 @@ async def create_task_with_message(req: TaskMessageRequest, db: Session = Depend
     reply = await agent.process_message(req.message)
     messages = [
         {"role": "user", "message": req.message},
-        {"role": "assistant", "message": reply}
+        {"role": "assistant", "message": reply},
     ]
     new_task = AgentTask(
         title=" ".join(req.message.split()[:7]),
         status="complete",
         messages=json.dumps(messages),
-        user_id=user.id
+        user_id=user.id,
     )
     db.add(new_task)
     db.commit()
@@ -128,13 +146,16 @@ async def create_task_with_message(req: TaskMessageRequest, db: Session = Depend
         "status": new_task.status,
         "messages": messages,
         "user_id": new_task.user_id,
-        "created_at": new_task.created_at.isoformat() if new_task.created_at else None
+        "created_at": new_task.created_at.isoformat() if new_task.created_at else None,
     }
+
+
 # main.py
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from models import AgentTask, User
 import json
+
 
 @app.post("/tasks/{task_id}/messages")
 async def add_message(task_id: int, req: Request, db: Session = Depends(get_db)):
@@ -155,6 +176,8 @@ async def add_message(task_id: int, req: Request, db: Session = Depends(get_db))
     task.messages = json.dumps(messages)
     db.commit()
     return {"messages": messages}
+
+
 @app.get("/tasks/{task_id}/messages")
 def get_task_messages(task_id: int, db: Session = Depends(get_db)):
     task = db.query(AgentTask).filter(AgentTask.id == task_id).first()
@@ -162,10 +185,13 @@ def get_task_messages(task_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Task not found")
     return json.loads(task.messages) if task.messages else []
 
+
 # --- Your chat endpoint ---
 agent = EasydoAgent()
 
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
+
+
 @app.post("/chat")
 async def chat_endpoint(req: ChatRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == req.email).first()
@@ -190,8 +216,11 @@ async def chat_endpoint(req: ChatRequest, db: Session = Depends(get_db)):
         print(f"{i}: {type(m).__name__}: {getattr(m, 'content', '')}")
     print("===============================================")
     # Pass conversation_history to your LLM agent
-    reply = await agent.process_message(req.message, conversation_history=conversation_history)
+    reply = await agent.process_message(
+        req.message, conversation_history=conversation_history
+    )
     return {"reply": reply}
+
 
 @app.get("/db-test")
 def db_test(db: Session = Depends(get_db)):
@@ -200,7 +229,8 @@ def db_test(db: Session = Depends(get_db)):
         return {"status": "success", "message": "Database connection works!"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
-    
+
+
 def get_last_n_task_messages(db, user_id: int, n: int = 10):
     tasks = (
         db.query(AgentTask)
