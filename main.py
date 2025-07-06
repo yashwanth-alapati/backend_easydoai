@@ -1,13 +1,16 @@
-from fastapi import FastAPI, Depends, HTTPException, Request
+import json
+
+from fastapi import FastAPI, Depends, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
-import json
-import asyncio
 
-from agents import EasydoAgent  # Adjust import if needed
-import models, database  # Make sure these are importable (may need to adjust import paths)
+from agents import EasydoAgent
+import models
+import database
+from models import AgentTask, User
+from langchain.schema import HumanMessage, AIMessage, SystemMessage
 
 app = FastAPI()
 
@@ -82,9 +85,6 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
     return {"message": "Login successful"}
 
 
-from fastapi import Query
-
-
 @app.get("/tasks")
 def list_tasks(email: str = Query(None), db: Session = Depends(get_db)):
     if email:
@@ -105,12 +105,6 @@ def list_tasks(email: str = Query(None), db: Session = Depends(get_db)):
         }
         for t in tasks
     ]
-
-
-from fastapi import FastAPI, Depends, HTTPException, Body
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr
-import json
 
 
 class TaskMessageRequest(BaseModel):
@@ -150,13 +144,6 @@ async def create_task_with_message(
     }
 
 
-# main.py
-from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
-from models import AgentTask, User
-import json
-
-
 @app.post("/tasks/{task_id}/messages")
 async def add_message(task_id: int, req: Request, db: Session = Depends(get_db)):
     data = await req.json()
@@ -188,8 +175,6 @@ def get_task_messages(task_id: int, db: Session = Depends(get_db)):
 
 # --- Your chat endpoint ---
 agent = EasydoAgent()
-
-from langchain.schema import HumanMessage, AIMessage, SystemMessage
 
 
 @app.post("/chat")

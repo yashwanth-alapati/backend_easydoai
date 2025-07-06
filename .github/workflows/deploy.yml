@@ -30,7 +30,7 @@ jobs:
         # Matches the linting checks from your example
         run: |
           black --check .
-          flake8 --max-line-length=88 --ignore=E501,E203 .
+          flake8 --max-line-length=88 --ignore=E501,E203,W503 --exclude=env .
       
       - name: Run tests with coverage
         # NOTE: This assumes you use pytest for testing.

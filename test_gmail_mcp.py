@@ -5,7 +5,6 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from anthropic import Anthropic
 from dotenv import load_dotenv
-import sys
 
 load_dotenv()  # Load environment variables from .env
 

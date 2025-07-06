@@ -1,7 +1,7 @@
 """Initial migration
 
 Revision ID: d618229fef36
-Revises: 
+Revises:
 Create Date: 2025-06-08 10:22:02.812578
 
 """
@@ -9,8 +9,6 @@ Create Date: 2025-06-08 10:22:02.812578
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
 revision: str = "d618229fef36"
