@@ -1,5 +1,7 @@
 import json
 import os
+import subprocess
+import sys
 from fastapi import FastAPI, Depends, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -46,6 +48,11 @@ class ChatRequest(BaseModel):
     message: str
 
 
+class TaskMessageRequest(BaseModel):
+    message: str
+    email: EmailStr
+
+
 def get_db():
     db = database.SessionLocal()
     try:
@@ -57,10 +64,56 @@ def get_db():
 @app.on_event("startup")
 def on_startup():
     try:
-        models.Base.metadata.create_all(bind=database.engine)
-        print(">>> Tables creation attempted")
+        print(">>> Starting database initialization...")
+        
+        # Check if DATABASE_URL is available
+        db_url = os.getenv("DATABASE_URL")
+        if not db_url:
+            print(">>> WARNING: DATABASE_URL not found!")
+            return
+        
+        print(f">>> DATABASE_URL found: {db_url[:50]}...")
+        
+        # Try to run migrations first
+        try:
+            print(">>> Running Alembic migrations...")
+            result = subprocess.run([
+                sys.executable, "-m", "alembic", "upgrade", "head"
+            ], 
+            capture_output=True, 
+            text=True,
+            cwd="/var/app/current" if os.path.exists("/var/app/current") else "."
+            )
+            
+            if result.returncode == 0:
+                print(">>> ✅ Migrations completed successfully!")
+                print(f">>> Migration output: {result.stdout}")
+            else:
+                print(f">>> ❌ Migration failed with return code {result.returncode}")
+                print(f">>> Migration stdout: {result.stdout}")
+                print(f">>> Migration stderr: {result.stderr}")
+                print(">>> 🔄 Falling back to direct table creation...")
+                raise Exception("Migration failed, using fallback")
+                
+        except Exception as migration_error:
+            print(f">>> Migration exception: {str(migration_error)}")
+            print(">>> 🔄 Using fallback table creation...")
+            
+            # Fallback: create tables directly
+            models.Base.metadata.create_all(bind=database.engine)
+            print(">>> ✅ Fallback table creation completed")
+        
+        # Test database connection
+        try:
+            with database.engine.connect() as conn:
+                conn.execute("SELECT 1")
+            print(">>> ✅ Database connection test successful!")
+        except Exception as conn_error:
+            print(f">>> ❌ Database connection test failed: {str(conn_error)}")
+            
     except Exception as e:
-        print(">>> Table creation error:", e)
+        print(f">>> ❌ Startup error: {str(e)}")
+        # Don't crash the application - continue anyway
 
 
 @app.post("/signup")
@@ -104,11 +157,6 @@ def list_tasks(email: str = Query(None), db: Session = Depends(get_db)):
         }
         for t in tasks
     ]
-
-
-class TaskMessageRequest(BaseModel):
-    message: str
-    email: EmailStr
 
 
 @app.post("/tasks")
