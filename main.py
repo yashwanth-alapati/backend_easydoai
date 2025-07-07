@@ -12,7 +12,6 @@ from models import AgentTask, User
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
 
 app = FastAPI()
-
 # Read CORS origins from environment variable
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 # Strip whitespace from each origin
