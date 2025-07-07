@@ -1,4 +1,5 @@
 import json
+import os
 
 from fastapi import FastAPI, Depends, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,13 +15,14 @@ from langchain.schema import HumanMessage, AIMessage, SystemMessage
 
 app = FastAPI()
 
+# Read CORS origins from environment variable
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+# Strip whitespace from each origin
+allowed_origins = [origin.strip() for origin in allowed_origins]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://ec2-3-144-167-93.us-east-2.compute.amazonaws.com:8000",
-        "http://easydoai-frontend-bucket.s3-website.us-east-2.amazonaws.com",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
