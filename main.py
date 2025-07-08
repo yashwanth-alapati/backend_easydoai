@@ -12,12 +12,72 @@ import database
 from models import User
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
 from chat_service import ChatService
+from contextlib import asynccontextmanager
 from mongodb_config import (
     close_mongodb_connection,
     is_mongodb_available,
 )
 
-app = FastAPI()
+
+# The new lifespan context manager to handle startup and shutdown.
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # --- STARTUP LOGIC (moved from on_startup) ---
+    print(">>> [LIFESPAN] Starting up application...")
+    try:
+        # Check if DATABASE_URL is available
+        db_url = os.getenv("DATABASE_URL")
+        if not db_url:
+            print(">>> [LIFESPAN] WARNING: DATABASE_URL not found!")
+        else:
+            print(f">>> [LIFESPAN] DATABASE_URL found: {db_url[:50]}...")
+
+            # Run migrations
+            print(">>> [LIFESPAN] Running Alembic migrations...")
+            result = subprocess.run(
+                [sys.executable, "-m", "alembic", "upgrade", "head"],
+                capture_output=True,
+                text=True,
+                cwd="/var/app/current" if os.path.exists("/var/app/current") else ".",
+            )
+
+            if result.returncode == 0:
+                print(">>> [LIFESPAN] ✅ Migrations completed successfully!")
+            else:
+                # Log the error but don't crash the app
+                print(
+                    f">>> [LIFESPAN] ❌ Migration failed with return code {result.returncode}"
+                )
+                print(f">>> [LIFESPAN] Migration stderr: {result.stderr}")
+
+        # Initialize MongoDB connection
+        print(">>> [LIFESPAN] Initializing MongoDB connection...")
+        if is_mongodb_available():
+            print(">>> [LIFESPAN] ✅ MongoDB connection appears to be available.")
+        else:
+            print(
+                ">>> [LIFESPAN] ⚠️ MongoDB not available - chat features will be limited."
+            )
+
+    except Exception as e:
+        # Log any other startup errors without crashing
+        print(
+            f">>> [LIFESPAN] ❌ An unexpected error occurred during startup: {str(e)}"
+        )
+
+    print(">>> [LIFESPAN] Startup complete.")
+    yield
+    # --- SHUTDOWN LOGIC (moved from on_shutdown) ---
+    print(">>> [LIFESPAN] Shutting down application...")
+    try:
+        close_mongodb_connection()
+        print(">>> [LIFESPAN] ✅ MongoDB connection closed.")
+    except Exception as e:
+        print(f">>> [LIFESPAN] ❌ Error closing MongoDB connection: {e}")
+
+
+app = FastAPI(lifespan=lifespan)
+
 # Read CORS origins from environment variable
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 # Strip whitespace from each origin
@@ -63,83 +123,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-@app.on_event("startup")
-def on_startup():
-    try:
-        print(">>> Starting database initialization...")
-
-        # Check if DATABASE_URL is available
-        db_url = os.getenv("DATABASE_URL")
-        if not db_url:
-            print(">>> WARNING: DATABASE_URL not found!")
-            return
-
-        print(f">>> DATABASE_URL found: {db_url[:50]}...")
-
-        # Try to run migrations first
-        try:
-            print(">>> Running Alembic migrations...")
-            result = subprocess.run(
-                [sys.executable, "-m", "alembic", "upgrade", "head"],
-                capture_output=True,
-                text=True,
-                cwd="/var/app/current" if os.path.exists("/var/app/current") else ".",
-            )
-
-            if result.returncode == 0:
-                print(">>> ✅ Migrations completed successfully!")
-                print(f">>> Migration output: {result.stdout}")
-            else:
-                print(f">>> ❌ Migration failed with return code {result.returncode}")
-                print(f">>> Migration stdout: {result.stdout}")
-                print(f">>> Migration stderr: {result.stderr}")
-                print(">>> 🔄 Falling back to direct table creation...")
-                raise Exception("Migration failed, using fallback")
-
-        except Exception as migration_error:
-            print(f">>> Migration exception: {str(migration_error)}")
-            print(">>> 🔄 Using fallback table creation...")
-
-            # Fallback: create tables directly
-            models.Base.metadata.create_all(bind=database.engine)
-            print(">>> ✅ Fallback table creation completed")
-
-        # Test database connection
-        try:
-            from sqlalchemy import text
-
-            with database.engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
-            print(">>> ✅ Database connection test successful!")
-        except Exception as conn_error:
-            print(f">>> ❌ Database connection test failed: {str(conn_error)}")
-
-        # NEW: Initialize MongoDB connection
-        try:
-            print(">>> Initializing MongoDB connection...")
-            if is_mongodb_available():
-                print(">>> ✅ MongoDB connection established!")
-            else:
-                print(">>> ⚠️ MongoDB not available - chat features will be limited")
-        except Exception as mongo_error:
-            print(f">>> ⚠️ MongoDB connection failed: {str(mongo_error)}")
-            print(">>> Application will continue without MongoDB chat features")
-
-    except Exception as e:
-        print(f">>> ❌ Startup error: {str(e)}")
-        # Don't crash the application - continue anyway
-
-
-@app.on_event("shutdown")
-def on_shutdown():
-    """Clean up database connections"""
-    try:
-        close_mongodb_connection()
-        print(">>> MongoDB connection closed")
-    except Exception as e:
-        print(f">>> Error closing MongoDB connection: {e}")
 
 
 @app.post("/signup")
