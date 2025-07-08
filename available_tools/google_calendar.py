@@ -93,8 +93,16 @@ GOOGLE_CALENDAR_MCP_TOOLS = [
             "calendarId": "string (use 'primary' for main calendar)",
             "summary": "string (title of the event)",
             "description": "string (optional, notes for the event)",
-            "start": "ISO datetime string **with timezone** (e.g., 2024-08-15T10:00:00Z or 2024-08-15T10:00:00-07:00). Do NOT omit the timezone.",
-            "end": "ISO datetime string **with timezone** (e.g., 2024-08-15T11:00:00Z or 2024-08-15T11:00:00-07:00). Do NOT omit the timezone.",
+            "start": (
+                "ISO datetime string **with timezone** "
+                "(e.g., 2024-08-15T10:00:00Z or 2024-08-15T10:00:00-07:00). "
+                "Do NOT omit the timezone."
+            ),
+            "end": (
+                "ISO datetime string **with timezone** "
+                "(e.g., 2024-08-15T11:00:00Z or 2024-08-15T11:00:00-07:00). "
+                "Do NOT omit the timezone."
+            ),
             "timeZone": "string (IANA timezone, e.g., America/Los_Angeles)",
             "location": "string (optional)",
             "attendees": "array of {email: string} (optional)",

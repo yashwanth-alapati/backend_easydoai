@@ -4,7 +4,7 @@ from pymongo.database import Database
 from pymongo.collection import Collection
 from dotenv import load_dotenv
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
 import logging
 
 load_dotenv()
@@ -73,7 +73,7 @@ def is_mongodb_available() -> bool:
     try:
         client = get_mongodb_client()
         return client is not None
-    except:
+    except Exception:
         return False
 
 

@@ -179,7 +179,7 @@ class ChatService:
             # Create text index if it doesn't exist
             try:
                 self.chat_collection.create_index([("message", "text")])
-            except:
+            except Exception:
                 pass  # Index might already exist
 
             cursor = (

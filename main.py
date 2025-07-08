@@ -13,7 +13,6 @@ from models import User
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
 from chat_service import ChatService
 from mongodb_config import (
-    get_mongodb_client,
     close_mongodb_connection,
     is_mongodb_available,
 )
