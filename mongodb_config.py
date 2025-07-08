@@ -19,6 +19,7 @@ _database: Optional[Database] = None
 
 logger = logging.getLogger(__name__)
 
+
 def get_mongodb_client() -> Optional[MongoClient]:
     """Get MongoDB client instance (singleton) - returns None if connection fails"""
     global _client
@@ -28,16 +29,17 @@ def get_mongodb_client() -> Optional[MongoClient]:
                 MONGODB_URL,
                 serverSelectionTimeoutMS=5000,  # 5 second timeout
                 connectTimeoutMS=5000,
-                socketTimeoutMS=5000
+                socketTimeoutMS=5000,
             )
             # Test the connection
-            _client.admin.command('ping')
+            _client.admin.command("ping")
             logger.info("✅ Connected to MongoDB successfully!")
         except Exception as e:
             logger.warning(f"⚠️ MongoDB connection failed: {e}")
             logger.info("💡 Application will continue without MongoDB chat features")
             return None
     return _client
+
 
 def get_mongodb_database() -> Optional[Database]:
     """Get MongoDB database instance"""
@@ -49,6 +51,7 @@ def get_mongodb_database() -> Optional[Database]:
         _database = client[MONGODB_DATABASE]
     return _database
 
+
 def get_chat_collection() -> Optional[Collection]:
     """Get the chat messages collection"""
     db = get_mongodb_database()
@@ -56,12 +59,14 @@ def get_chat_collection() -> Optional[Collection]:
         return None
     return db.chat_messages
 
+
 def get_chat_sessions_collection() -> Optional[Collection]:
     """Get the chat sessions collection"""
     db = get_mongodb_database()
     if db is None:
         return None
     return db.chat_sessions
+
 
 def is_mongodb_available() -> bool:
     """Check if MongoDB is available"""
@@ -71,17 +76,18 @@ def is_mongodb_available() -> bool:
     except:
         return False
 
+
 # Chat message document structure
 class ChatMessage:
     """Chat message document structure for MongoDB"""
-    
+
     @staticmethod
     def create_message(
         session_id: str,
         user_id: int,
         role: str,  # 'user' or 'assistant'
         message: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Create a chat message document"""
         return {
@@ -91,18 +97,17 @@ class ChatMessage:
             "message": message,
             "metadata": metadata or {},
             "timestamp": datetime.utcnow(),
-            "created_at": datetime.utcnow()
+            "created_at": datetime.utcnow(),
         }
+
 
 # Chat session document structure
 class ChatSession:
     """Chat session document structure for MongoDB"""
-    
+
     @staticmethod
     def create_session(
-        user_id: int,
-        title: str,
-        session_type: str = "task_chat"
+        user_id: int, title: str, session_type: str = "task_chat"
     ) -> Dict[str, Any]:
         """Create a chat session document"""
         return {
@@ -112,8 +117,9 @@ class ChatSession:
             "status": "active",
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
-            "message_count": 0
+            "message_count": 0,
         }
+
 
 def close_mongodb_connection():
     """Close MongoDB connection"""
@@ -122,4 +128,4 @@ def close_mongodb_connection():
         _client.close()
         _client = None
         _database = None
-        logger.info("MongoDB connection closed") 
+        logger.info("MongoDB connection closed")
