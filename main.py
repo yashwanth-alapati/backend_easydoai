@@ -17,6 +17,8 @@ from mongodb_config import (
     close_mongodb_connection,
     is_mongodb_available,
 )
+from alembic.config import Config
+from alembic import command
 
 
 # The new lifespan context manager to handle startup and shutdown.
@@ -32,23 +34,16 @@ async def lifespan(app: FastAPI):
         else:
             print(f">>> [LIFESPAN] DATABASE_URL found: {db_url[:50]}...")
 
-            # Run migrations
+            # Run migrations using the Alembic API - this is more reliable
             print(">>> [LIFESPAN] Running Alembic migrations...")
-            result = subprocess.run(
-                [sys.executable, "-m", "alembic", "upgrade", "head"],
-                capture_output=True,
-                text=True,
-                cwd="/var/app/current" if os.path.exists("/var/app/current") else ".",
-            )
-
-            if result.returncode == 0:
+            try:
+                alembic_cfg = Config("alembic.ini")
+                command.upgrade(alembic_cfg, "head")
                 print(">>> [LIFESPAN] ✅ Migrations completed successfully!")
-            else:
+            except Exception as e:
                 # Log the error but don't crash the app
-                print(
-                    f">>> [LIFESPAN] ❌ Migration failed with return code {result.returncode}"
-                )
-                print(f">>> [LIFESPAN] Migration stderr: {result.stderr}")
+                print(f">>> [LIFESPAN] ❌ Migration failed: {e}")
+
 
         # Initialize MongoDB connection
         print(">>> [LIFESPAN] Initializing MongoDB connection...")
@@ -90,6 +85,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Root endpoint for Elastic Beanstalk health checks
+@app.get("/")
+def read_root():
+    return {"status": "ok"}
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
