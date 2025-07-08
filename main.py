@@ -4,13 +4,14 @@ from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from agents import EasydoAgent
-from langchain.schema import HumanMessage, AIMessage, SystemMessage
+from langchain.schema import HumanMessage, AIMessage
 from chat_service import ChatService
-from user_service import UserService, user_service
+from user_service import user_service
 from mongodb_config import (
     close_mongodb_connection,
     is_mongodb_available,
 )
+
 
 # The new lifespan context manager to handle startup and shutdown.
 @asynccontextmanager
@@ -23,10 +24,14 @@ async def lifespan(app: FastAPI):
         if is_mongodb_available():
             print(">>> [LIFESPAN] ✅ MongoDB connection appears to be available.")
         else:
-            print(">>> [LIFESPAN] ⚠️ MongoDB not available - application will be limited.")
+            print(
+                ">>> [LIFESPAN] ⚠️ MongoDB not available - application will be limited."
+            )
 
     except Exception as e:
-        print(f">>> [LIFESPAN] ❌ An unexpected error occurred during startup: {str(e)}")
+        print(
+            f">>> [LIFESPAN] ❌ An unexpected error occurred during startup: {str(e)}"
+        )
 
     print(">>> [LIFESPAN] Startup complete.")
     yield
@@ -52,6 +57,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Root endpoint for Elastic Beanstalk health checks
 @app.get("/")
@@ -91,7 +97,7 @@ def signup(req: SignupRequest):
         return {"message": "Signup successful", "user_id": user["id"]}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -149,7 +155,9 @@ def list_tasks(email: str = Query(None)):
 @app.post("/tasks")
 async def create_task_with_message(
     req: TaskMessageRequest,
-    session_id: str = Query(None, description="Existing session ID to continue, or None for new"),
+    session_id: str = Query(
+        None, description="Existing session ID to continue, or None for new"
+    ),
 ):
     """Homepage chat logic: continue existing session or create new"""
     if not is_mongodb_available():
@@ -262,7 +270,9 @@ async def add_message(task_id: str, req: Request):
         elif role == "assistant":
             conversation_history.append(AIMessage(content=content))
 
-    print(f">>> Continuing session {task_id} with {len(conversation_history)} previous messages")
+    print(
+        f">>> Continuing session {task_id} with {len(conversation_history)} previous messages"
+    )
 
     # Add user message
     chat_service.add_message(task_id, user["id"], "user", user_message)
