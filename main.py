@@ -380,7 +380,7 @@ def get_task_messages(task_id: str, db: Session = Depends(get_db)):
         {"role": msg["role"], "message": msg["message"]} for msg in messages
     ]
 
-    return formatted_messages
+    return {"messages": formatted_messages}
 
 
 # --- Your chat endpoint ---
