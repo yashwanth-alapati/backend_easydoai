@@ -7,7 +7,6 @@ on:
 
 env:
   PYTHON_VERSION: "3.11"
-  TEST_DATABASE_URL: postgresql://testuser:testpassword@localhost:5433/testdb
 
 jobs:
   build-and-deploy:
@@ -25,10 +24,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Start test database
-        # Use the modern 'docker compose' command
-        run: docker compose -f docker-compose.test.yml up -d
-
       - name: Lint with black and flake8
         run: |
           black --check .
@@ -36,20 +31,15 @@ jobs:
 
       - name: Run tests with coverage
         env:
-          DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
+          MONGODB_URL: ${{ secrets.MONGODB_URL }}
+          MONGODB_DATABASE: "easydo_test"
           ANTHROPIC_API_KEY: "test-key-for-pytest"
         run: |
-          alembic upgrade head
           coverage run --source='.' -m pytest
           coverage report -m
 
-      - name: Stop test database
-        if: always()
-        # Use the modern 'docker compose' command
-        run: docker compose -f docker-compose.test.yml down
-
       - name: Create ZIP file for deployment
-        run: zip -r deploy.zip . -x ".git/*" "env/*" "*__pycache__/*" ".DS_Store" "tests/*" "docker-compose.test.yml"
+        run: zip -r deploy.zip . -x ".git/*" "env/*" "*__pycache__/*" ".DS_Store" "tests/*" "*.pyc" "*.pyo" "*.pyd"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
