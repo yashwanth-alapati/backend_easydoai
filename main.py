@@ -1,6 +1,4 @@
 import os
-import subprocess
-import sys
 from fastapi import FastAPI, Depends, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -44,7 +42,6 @@ async def lifespan(app: FastAPI):
                 # Log the error but don't crash the app
                 print(f">>> [LIFESPAN] ❌ Migration failed: {e}")
 
-
         # Initialize MongoDB connection
         print(">>> [LIFESPAN] Initializing MongoDB connection...")
         if is_mongodb_available():
@@ -85,6 +82,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Root endpoint for Elastic Beanstalk health checks
 @app.get("/")
