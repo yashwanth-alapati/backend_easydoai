@@ -72,27 +72,26 @@ class EasydoAgent:
         logger.info("Entering agent node.")
         messages = state["messages"]
         user_context = state.get("user_context", {})
-        
+
         if not messages or not isinstance(messages[0], SystemMessage):
             current_date = datetime.now().strftime("%B %d, %Y")
             # Enhanced system message with user context
             system_content = f"You are easydo.ai, an agentic productivity assistant. Today's date is {current_date}."
-            
+
             if user_context.get("user_id"):
-                system_content += f"\n\nIMPORTANT: When using Gmail tools, always use user_id: {user_context['user_id']}"
-            
+                system_content += f"\n\nIMPORTANT: When using Gmail tools,always use user_id: {user_context['user_id']}"
+
             system_message = SystemMessage(content=system_content)
             messages = [system_message] + list(messages)
             logger.info("Added system message to conversation.")
-            
+
         logger.info(f"Messages to LLM: {[m.content for m in messages]}")
         response = self.llm_with_tools.invoke(messages)
         logger.info(f"LLM response: {getattr(response, 'content', str(response))}")
         has_tool_calls = hasattr(response, "tool_calls") and response.tool_calls
         if has_tool_calls:
-            logger.info(
-                f"LLM requested tool calls: {[tc['name'] for tc in response.tool_calls]}"
-            )
+            tool_names = [tc['name'] for tc in response.tool_calls]
+            logger.info(f"LLM requested tool calls: {tool_names}")
         else:
             logger.info("LLM did not request any tool calls.")
         return {
@@ -121,21 +120,21 @@ class EasydoAgent:
         user_context = state.get("user_context", {})
         last_message = messages[-1]
         tool_messages = []
-        
+
         if hasattr(last_message, "tool_calls") and last_message.tool_calls:
             for tool_call in last_message.tool_calls:
                 tool_name = tool_call["name"]
                 tool_args = tool_call["args"]
                 tool_call_id = tool_call["id"]
-                
+
                 logger.info(f"Processing tool call: {tool_name} with args: {tool_args}")
-                
+
                 # AUTO-INJECT USER_ID FOR GMAIL TOOLS
                 if tool_name == "gmail_mcp" and user_context.get("user_id"):
                     if "user_id" not in tool_args:
                         tool_args["user_id"] = user_context["user_id"]
                         logger.info(f"Auto-injected user_id: {user_context['user_id']}")
-                
+
                 # --- PATCH: Fix Google Calendar datetime strings if needed ---
                 if (
                     tool_name == "google_calendar_mcp"
@@ -153,7 +152,7 @@ class EasydoAgent:
                             args[key] = self._ensure_iso_with_tz(val, tz)
                     tool_args["args"] = args
                 # -----------------------------------------------------------
-                
+
                 if tool_name in self.tools_by_name:
                     tool = self.tools_by_name[tool_name]
                     try:
@@ -193,11 +192,11 @@ class EasydoAgent:
                     tool_messages.append(tool_message)
         else:
             logger.info("No tool calls to process in tools node.")
-            
+
         return {
-            "messages": messages + tool_messages, 
+            "messages": messages + tool_messages,
             "tool_results": [],
-            "user_context": user_context
+            "user_context": user_context,
         }
 
     def _final_node(self, state: AgentState) -> Dict[str, Any]:
@@ -211,22 +210,25 @@ class EasydoAgent:
         return state.get("next_action", "final")
 
     async def process_message(
-        self, user_input: str, conversation_history: List[BaseMessage] = None, user_id: str = None
+        self,
+        user_input: str,
+        conversation_history: List[BaseMessage] = None,
+        user_id: str = None,
     ) -> str:
         logger.info(f"Processing user message: {user_input}")
         if conversation_history is None:
             conversation_history = []
         messages = conversation_history + [HumanMessage(content=user_input)]
         logger.info(f"Initial state for graph: {messages}")
-        
+
         # Include user context
         initial_state = {
-            "messages": messages, 
-            "tool_results": [], 
+            "messages": messages,
+            "tool_results": [],
             "next_action": "",
-            "user_context": {"user_id": user_id} if user_id else {}
+            "user_context": {"user_id": user_id} if user_id else {},
         }
-        
+
         final_state = await self.graph.ainvoke(initial_state)
         logger.info(f"Final state after graph execution: {final_state}")
         for message in reversed(final_state["messages"]):

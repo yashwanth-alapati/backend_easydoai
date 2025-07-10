@@ -23,9 +23,9 @@ async def lifespan(app: FastAPI):
     try:
         # Check required environment variables
         required_env_vars = [
-            'EASYDOAI_GOOGLE_CLIENT_ID',
-            'EASYDOAI_GOOGLE_CLIENT_SECRET',
-            'EASYDOAI_GOOGLE_REDIRECT_URI'
+            "EASYDOAI_GOOGLE_CLIENT_ID",
+            "EASYDOAI_GOOGLE_CLIENT_SECRET",
+            "EASYDOAI_GOOGLE_REDIRECT_URI",
         ]
 
         missing_vars = [var for var in required_env_vars if not os.getenv(var)]
@@ -62,7 +62,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # Read CORS origins from environment variable - UPDATE FOR PRODUCTION
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,https://tachyfy.com").split(",")
+allowed_origins = os.getenv(
+    "ALLOWED_ORIGINS", "http://localhost:3000,https://tachyfy.com"
+).split(",")
 allowed_origins = [origin.strip() for origin in allowed_origins]
 
 app.add_middleware(
@@ -224,9 +226,9 @@ async def create_task_with_message(
     # Process with agent WITH conversation history AND user_id
     agent = EasydoAgent()
     reply = await agent.process_message(
-        req.message, 
+        req.message,
         conversation_history=conversation_history,
-        user_id=user["id"]  # Pass user_id to agent
+        user_id=user["id"],  # Pass user_id to agent
     )
 
     # Add agent response
@@ -301,9 +303,9 @@ async def add_message(task_id: str, req: Request):
     # Get assistant reply WITH conversation history AND user_id
     agent = EasydoAgent()
     reply = await agent.process_message(
-        user_message, 
+        user_message,
         conversation_history=conversation_history,
-        user_id=user["id"]  # Pass user_id to agent
+        user_id=user["id"],  # Pass user_id to agent
     )
 
     # Add assistant response
@@ -354,7 +356,7 @@ def health_check():
         "mongodb_available": is_mongodb_available(),
         "services": {
             "gmail_mcp": "available",
-            "auth": "available", 
-            "chat": "available" if is_mongodb_available() else "limited"
-        }
+            "auth": "available",
+            "chat": "available" if is_mongodb_available() else "limited",
+        },
     }
