@@ -196,10 +196,10 @@ def get_user_credentials(user_id):
         logger.info(f"Using client_id: {client_id[:20] if client_id else 'MISSING'}...")
         logger.info(f"Using client_secret: {bool(client_secret)}")
 
-        credentials = Credentials(
+            credentials = Credentials(
             token=access_token,
             refresh_token=refresh_token,
-            token_uri="https://oauth2.googleapis.com/token",
+                token_uri="https://oauth2.googleapis.com/token",
             client_id=client_id,
             client_secret=client_secret,
             scopes=scopes_list
@@ -233,7 +233,7 @@ def get_user_credentials(user_id):
                 return None
 
         logger.info("Credentials ready for Calendar API")
-        return credentials
+            return credentials
     except Exception as e:
         logger.error(f"Error getting credentials for user {user_id}: {e}")
         return None
@@ -349,10 +349,10 @@ def handle_tool_call(tool_name, arguments, request_id):
         logger.info("Calendar service built successfully")
 
         if tool_name == "list_calendars":
-            calendars_result = service.calendarList().list().execute()
-            calendars = calendars_result.get("items", [])
+    calendars_result = service.calendarList().list().execute()
+    calendars = calendars_result.get("items", [])
             calendar_list = []
-            for calendar in calendars:
+    for calendar in calendars:
                 calendar_list.append({
                     'id': calendar['id'],
                     'name': calendar['summary'],
@@ -398,19 +398,19 @@ def handle_tool_call(tool_name, arguments, request_id):
             logger.info(f"Creating event: {summary} from {start_time} to {end_time}")
 
             # Build event object
-            event = {
-                "summary": summary,
+    event = {
+        "summary": summary,
                 "start": {"dateTime": start_time, "timeZone": "UTC"},
                 "end": {"dateTime": end_time, "timeZone": "UTC"}
             }
 
             # Add optional fields
-            if description:
-                event["description"] = description
-            if location:
-                event["location"] = location
-            if attendees:
-                event["attendees"] = [{"email": email} for email in attendees]
+    if description:
+        event["description"] = description
+    if location:
+        event["location"] = location
+    if attendees:
+        event["attendees"] = [{"email": email} for email in attendees]
 
             logger.info(f"Event object: {json.dumps(event)}")
 
@@ -418,7 +418,7 @@ def handle_tool_call(tool_name, arguments, request_id):
             created_event = service.events().insert(calendarId=calendar_id, body=event).execute()
 
             logger.info(f"Event created successfully with ID: {created_event['id']}")
-            return {
+        return {
                 "jsonrpc": "2.0",
                 "id": request_id,
                 "result": {

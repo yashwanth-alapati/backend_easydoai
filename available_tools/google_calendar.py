@@ -2,157 +2,175 @@ from langchain.tools import Tool
 from pydantic import BaseModel, Field
 from typing import Any, Dict
 import asyncio
-from contextlib import AsyncExitStack
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
-import json
-import os
+from services.calendar_lambda_service import CalendarLambdaService
+
+# Initialize calendar Lambda service
+calendar_lambda_service = CalendarLambdaService()
 
 
 class GoogleCalendarMCPInput(BaseModel):
     tool: str = Field(
-        description="The Google Calendar MCP tool to call, e.g. 'create-event', 'list-events', etc."
+        description="The Google Calendar tool to call, e.g. 'create-event', 'list-calendars', etc."
     )
-    args: Dict[str, Any] = Field(
-        description="Arguments for the Google Calendar MCP tool."
-    )
+    args: Dict[str, Any] = Field(description="Arguments for the Google Calendar tool.")
 
 
 def google_calendar_mcp_func(tool: str, args: Dict[str, Any]) -> Any:
-    async def run():
-        async with AsyncExitStack() as stack:
-            script_dir = os.path.dirname(os.path.realpath(__file__))
-            # Construct the absolute path to the credentials file
-            credentials_path = os.path.abspath(
-                os.path.join(
-                    script_dir, "..", "..", "google-calendar-mcp", "gcp-oauth.keys.json"
-                )
-            )
+    """
+    Enhanced Google Calendar function that integrates with Lambda and OAuth
+    Maps old MCP tool calls to new Lambda-based calendar service
+    """
 
-            server_params = StdioServerParameters(
-                command="npx",
-                args=["@cocal/google-calendar-mcp"],
-                # Pass the absolute path as an environment variable to the tool
-                env={"GOOGLE_OAUTH_CREDENTIALS": credentials_path},
-            )
-            stdio_transport = await stack.enter_async_context(
-                stdio_client(server_params)
-            )
-            stdio, write = stdio_transport
-            session = await stack.enter_async_context(ClientSession(stdio, write))
-            await session.initialize()
-            result = await session.call_tool(tool, args)
-            # Convert result to plain dict or string
-            if hasattr(result, "content"):
-                if isinstance(result.content, list):
-                    return "\n".join(
-                        getattr(item, "text", str(item)) for item in result.content
-                    )
-                return getattr(result.content, "text", str(result.content))
-            return str(result)
+    async def run():
+        try:
+            # Extract user_id (should be auto-injected by agent)
+            user_id = args.get("user_id")
+            if not user_id:
+                return {
+                    "status": "error",
+                    "message": "user_id is required for calendar operations",
+                }
+
+            # Map old tool names to new Lambda tool names
+            tool_mapping = {
+                "list-calendars": "list_calendars",
+                "list-events": "list_events",
+                "create-event": "create_event",
+                "update-event": "update_event",
+                "delete-event": "delete_event",
+            }
+
+            lambda_tool_name = tool_mapping.get(tool, tool)
+
+            if tool == "list-calendars":
+                result = await calendar_lambda_service.call_calendar_tool(
+                    lambda_tool_name, user_id
+                )
+
+            elif tool == "list-events":
+                result = await calendar_lambda_service.call_calendar_tool(
+                    lambda_tool_name,
+                    user_id,
+                    calendar_id=args.get("calendarId", "primary"),
+                    max_results=args.get("maxResults", 10),
+                    time_min=args.get("timeMin"),
+                    time_max=args.get("timeMax"),
+                )
+
+            elif tool == "create-event":
+                # Map old argument names to new ones
+                result = await calendar_lambda_service.call_calendar_tool(
+                    lambda_tool_name,
+                    user_id,
+                    summary=args.get("summary"),
+                    start_time=args.get("start"),
+                    end_time=args.get("end"),
+                    calendar_id=args.get("calendarId", "primary"),
+                    description=args.get("description"),
+                    location=args.get("location"),
+                    attendees=[
+                        attendee.get("email")
+                        for attendee in args.get("attendees", [])
+                        if attendee.get("email")
+                    ],
+                )
+
+            elif tool == "update-event":
+                result = await calendar_lambda_service.call_calendar_tool(
+                    lambda_tool_name,
+                    user_id,
+                    event_id=args.get("eventId"),
+                    calendar_id=args.get("calendarId", "primary"),
+                    summary=args.get("summary"),
+                    start_time=args.get("start"),
+                    end_time=args.get("end"),
+                    description=args.get("description"),
+                    location=args.get("location"),
+                )
+
+            elif tool == "delete-event":
+                result = await calendar_lambda_service.call_calendar_tool(
+                    lambda_tool_name,
+                    user_id,
+                    event_id=args.get("eventId"),
+                    calendar_id=args.get("calendarId", "primary"),
+                )
+
+            else:
+                return {
+                    "status": "error",
+                    "message": (
+                        f"Unknown calendar tool: {tool}. "
+                        "Available: list-calendars, list-events, create-event, "
+                        "update-event, delete-event"
+                    ),
+                }
+
+            return result
+
+        except Exception as e:
+            return {"status": "error", "message": f"Calendar tool error: {str(e)}"}
 
     return asyncio.run(run())
 
 
-# ---- TOOL DEFINITIONS FOR PROMPT ----
-
-GOOGLE_CALENDAR_MCP_TOOLS = [
+# Updated tool descriptions for the new Lambda-based system
+GOOGLE_CALENDAR_TOOLS = [
     {
         "name": "list-calendars",
-        "description": "List all available calendars.",
+        "description": "List all available calendars for the user.",
         "args": {},
     },
     {
         "name": "list-events",
-        "description": "List events from one or more calendars.",
+        "description": "List events from a calendar.",
         "args": {
-            "calendarId": "string or array of strings (use 'primary' for main calendar)",
-            "timeMin": "ISO datetime string (optional)",
-            "timeMax": "ISO datetime string (optional)",
+            "calendarId": "string (use 'primary' for main calendar, default: 'primary')",
+            "maxResults": "integer (max events to return, default: 10)",
+            "timeMin": "ISO datetime string (optional, start time filter)",
+            "timeMax": "ISO datetime string (optional, end time filter)",
         },
-    },
-    {
-        "name": "search-events",
-        "description": "Search for events in a calendar by text query.",
-        "args": {
-            "calendarId": "string (use 'primary' for main calendar)",
-            "query": "string (free text search)",
-            "timeMin": "ISO datetime string (optional)",
-            "timeMax": "ISO datetime string (optional)",
-        },
-    },
-    {
-        "name": "list-colors",
-        "description": "List available color IDs and their meanings for calendar events.",
-        "args": {},
     },
     {
         "name": "create-event",
         "description": "Create a new calendar event.",
         "args": {
-            "calendarId": "string (use 'primary' for main calendar)",
-            "summary": "string (title of the event)",
-            "description": "string (optional, notes for the event)",
-            "start": (
-                "ISO datetime string **with timezone** "
-                "(e.g., 2024-08-15T10:00:00Z or 2024-08-15T10:00:00-07:00). "
-                "Do NOT omit the timezone."
-            ),
-            "end": (
-                "ISO datetime string **with timezone** "
-                "(e.g., 2024-08-15T11:00:00Z or 2024-08-15T11:00:00-07:00). "
-                "Do NOT omit the timezone."
-            ),
-            "timeZone": "string (IANA timezone, e.g., America/Los_Angeles)",
-            "location": "string (optional)",
-            "attendees": "array of {email: string} (optional)",
-            "colorId": "string (optional, see list-colors)",
-            "reminders": "object (optional, see below)",
-            "recurrence": "array of strings (optional, RFC5545 format)",
+            "calendarId": "string (use 'primary' for main calendar, default: 'primary')",
+            "summary": "string (title of the event, required)",
+            "description": "string (optional, event description)",
+            "start": "ISO datetime string (event start time, required)",
+            "end": "ISO datetime string (event end time, required)",
+            "location": "string (optional, event location)",
+            "attendees": "array of {email: string} (optional, attendee list)",
         },
     },
     {
         "name": "update-event",
-        "description": "Update an existing calendar event with recurring event modification scope support.",
+        "description": "Update an existing calendar event.",
         "args": {
-            "calendarId": "string",
-            "eventId": "string",
+            "calendarId": "string (default: 'primary')",
+            "eventId": "string (required, ID of event to update)",
             "summary": "string (optional, new title)",
             "description": "string (optional, new description)",
             "start": "ISO datetime string (optional, new start time)",
             "end": "ISO datetime string (optional, new end time)",
-            "timeZone": "string (IANA timezone, required if modifying start/end or for recurring events)",
             "location": "string (optional, new location)",
-            "colorId": "string (optional, new color ID)",
-            "attendees": "array of {email: string} (optional, replaces existing attendees)",
-            "reminders": "object (optional, new reminder settings)",
-            "recurrence": "array of strings (optional, new recurrence rules)",
-            "modificationScope": "string (optional, 'single', 'all', or 'future')",
-            "originalStartTime": "ISO datetime string (required if modificationScope is 'single')",
-            "futureStartDate": "ISO datetime string (required if modificationScope is 'future')",
         },
     },
     {
         "name": "delete-event",
         "description": "Delete a calendar event.",
-        "args": {"calendarId": "string", "eventId": "string"},
-    },
-    {
-        "name": "get-freebusy",
-        "description": "Retrieve free/busy information for one or more calendars within a time range.",
         "args": {
-            "timeMin": "ISO datetime string (start of interval)",
-            "timeMax": "ISO datetime string (end of interval)",
-            "timeZone": "string (optional, IANA timezone)",
-            "groupExpansionMax": "integer (optional, max group expansion)",
-            "calendarExpansionMax": "integer (optional, max calendar expansion)",
-            "items": "array of {id: string} (calendar or group identifiers)",
+            "calendarId": "string (default: 'primary')",
+            "eventId": "string (required, ID of event to delete)",
         },
     },
 ]
 
 
 def build_tools_prompt(tools):
+    import json
+
     return "\n".join(
         f"- {tool['name']}: {tool['description']}\n  Arguments: {json.dumps(tool['args'], indent=2)}"
         for tool in tools
@@ -160,9 +178,10 @@ def build_tools_prompt(tools):
 
 
 GOOGLE_CALENDAR_SYSTEM_PROMPT = (
-    "You have access to the following Google Calendar MCP tools:\n"
-    f"{build_tools_prompt(GOOGLE_CALENDAR_MCP_TOOLS)}\n"
-    "When calling a tool, use the exact argument names and types as shown above."
+    "You have access to the following Google Calendar tools via Lambda MCP:\n"
+    f"{build_tools_prompt(GOOGLE_CALENDAR_TOOLS)}\n"
+    "These tools integrate with the user's Google Calendar. If authentication is required, "
+    "the system will provide an authorization URL. Always include user_id in tool calls."
 )
 
 
@@ -173,6 +192,3 @@ def get_tool() -> Tool:
         func=google_calendar_mcp_func,
         args_schema=GoogleCalendarMCPInput,
     )
-
-
-# You can now use GOOGLE_CALENDAR_SYSTEM_PROMPT as your system prompt for the LLM.
