@@ -58,10 +58,12 @@ class CalendarLambdaService:
                 error_message = result["error"].get("message", "")
                 if "not authenticated" in error_message.lower():
                     # Generate OAuth URL for Calendar
-                    auth_data = oauth_service.get_authorization_url("google_calendar", user_id)
+                    auth_data = oauth_service.get_authorization_url(
+                        "google_calendar", user_id
+                    )
                     return {
                         "status": "authentication_required",
-                        "message": "Google Calendar access requires authentication. Please visit the authorization URL.",
+                        "message": "Google Calendar access requires authentication.Please visit the authorization URL.",
                         "authorization_url": auth_data["authorization_url"],
                         "state": auth_data["state"],
                     }

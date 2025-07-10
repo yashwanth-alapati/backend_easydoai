@@ -129,11 +129,9 @@ def get_user_credentials(user_id):
         logger.info(f"Looking for credentials for user: {user_id}")
         response = table.get_item(Key={'user_id': user_id, 'service': 'gmail'})
         logger.info(f"DynamoDB response status: {'Found' if 'Item' in response else 'Not Found'}")
-            
             if 'Item' not in response:
             logger.warning(f"No Gmail credentials found for user {user_id}")
             return None
-            
             token_data = response['Item']
         logger.info(f"Token data keys: {list(token_data.keys())}")
 
@@ -208,7 +206,6 @@ def get_user_credentials(user_id):
                 from google.auth.transport.requests import Request
                 credentials.refresh(Request())
                 logger.info("Token refreshed successfully")
-                
                 # Update DynamoDB with new token
                 table.update_item(
                     Key={'user_id': user_id, 'service': 'gmail'},
@@ -222,7 +219,6 @@ def get_user_credentials(user_id):
             except Exception as e:
                 logger.error(f"Token refresh failed: {e}")
                 return None
-            
         logger.info("Credentials ready for Gmail API")
             return credentials
     except Exception as e:
@@ -303,7 +299,6 @@ def handle_tool_call(tool_name, arguments, request_id):
         q=query,
         maxResults=max_results
     ).execute()
-    
                 messages = results.get('messages', [])
                 logger.info(f"Retrieved {len(messages)} messages")
                 detailed_messages = []

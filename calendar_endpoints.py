@@ -45,6 +45,7 @@ class CalendarResponse(BaseModel):
 
 # Endpoints
 
+
 @router.get("/status")
 async def calendar_status():
     """Check Calendar service status"""
@@ -56,7 +57,7 @@ async def get_calendars(
     user_id: str = Query(..., description="User ID to get calendars for")
 ):
     """Get all calendars for a user"""
-    
+
     # Verify user exists
     user = user_service.get_user_by_id(user_id)
     if not user:
@@ -64,21 +65,18 @@ async def get_calendars(
 
     try:
         result = await calendar_lambda_service.list_calendars(user_id)
-        
+
         if result["status"] == "authentication_required":
             return CalendarResponse(
                 status="authentication_required",
                 message=result["message"],
-                authorization_url=result["authorization_url"]
+                authorization_url=result["authorization_url"],
             )
         elif result["status"] == "success":
-            return CalendarResponse(
-                status="success",
-                data=result["data"]
-            )
+            return CalendarResponse(status="success", data=result["data"])
         else:
             raise HTTPException(status_code=500, detail=result["message"])
-            
+
     except Exception as e:
         logger.error(f"Error getting calendars: {e}")
         raise HTTPException(status_code=500, detail="Failed to get calendars")
@@ -90,10 +88,10 @@ async def get_events(
     calendar_id: str = Query("primary", description="Calendar ID"),
     max_results: int = Query(10, description="Maximum number of events to return"),
     time_min: Optional[str] = Query(None, description="Start time filter (ISO format)"),
-    time_max: Optional[str] = Query(None, description="End time filter (ISO format)")
+    time_max: Optional[str] = Query(None, description="End time filter (ISO format)"),
 ):
     """Get events from a calendar"""
-    
+
     # Verify user exists
     user = user_service.get_user_by_id(user_id)
     if not user:
@@ -105,23 +103,20 @@ async def get_events(
             calendar_id=calendar_id,
             max_results=max_results,
             time_min=time_min,
-            time_max=time_max
+            time_max=time_max,
         )
-        
+
         if result["status"] == "authentication_required":
             return CalendarResponse(
                 status="authentication_required",
                 message=result["message"],
-                authorization_url=result["authorization_url"]
+                authorization_url=result["authorization_url"],
             )
         elif result["status"] == "success":
-            return CalendarResponse(
-                status="success",
-                data=result["data"]
-            )
+            return CalendarResponse(status="success", data=result["data"])
         else:
             raise HTTPException(status_code=500, detail=result["message"])
-            
+
     except Exception as e:
         logger.error(f"Error getting events: {e}")
         raise HTTPException(status_code=500, detail="Failed to get events")
@@ -129,11 +124,10 @@ async def get_events(
 
 @router.post("/events")
 async def create_event(
-    request: CreateEventRequest,
-    user_id: str = Query(..., description="User ID")
+    request: CreateEventRequest, user_id: str = Query(..., description="User ID")
 ):
     """Create a new calendar event"""
-    
+
     # Verify user exists
     user = user_service.get_user_by_id(user_id)
     if not user:
@@ -148,24 +142,24 @@ async def create_event(
             calendar_id=request.calendar_id,
             description=request.description,
             location=request.location,
-            attendees=request.attendees
+            attendees=request.attendees,
         )
-        
+
         if result["status"] == "authentication_required":
             return CalendarResponse(
                 status="authentication_required",
                 message=result["message"],
-                authorization_url=result["authorization_url"]
+                authorization_url=result["authorization_url"],
             )
         elif result["status"] == "success":
             return CalendarResponse(
                 status="success",
                 data=result["data"],
-                message="Event created successfully"
+                message="Event created successfully",
             )
         else:
             raise HTTPException(status_code=500, detail=result["message"])
-            
+
     except Exception as e:
         logger.error(f"Error creating event: {e}")
         raise HTTPException(status_code=500, detail="Failed to create event")
@@ -173,11 +167,10 @@ async def create_event(
 
 @router.put("/events")
 async def update_event(
-    request: UpdateEventRequest,
-    user_id: str = Query(..., description="User ID")
+    request: UpdateEventRequest, user_id: str = Query(..., description="User ID")
 ):
     """Update an existing calendar event"""
-    
+
     # Verify user exists
     user = user_service.get_user_by_id(user_id)
     if not user:
@@ -192,24 +185,24 @@ async def update_event(
             start_time=request.start_time,
             end_time=request.end_time,
             description=request.description,
-            location=request.location
+            location=request.location,
         )
-        
+
         if result["status"] == "authentication_required":
             return CalendarResponse(
                 status="authentication_required",
                 message=result["message"],
-                authorization_url=result["authorization_url"]
+                authorization_url=result["authorization_url"],
             )
         elif result["status"] == "success":
             return CalendarResponse(
                 status="success",
                 data=result["data"],
-                message="Event updated successfully"
+                message="Event updated successfully",
             )
         else:
             raise HTTPException(status_code=500, detail=result["message"])
-            
+
     except Exception as e:
         logger.error(f"Error updating event: {e}")
         raise HTTPException(status_code=500, detail="Failed to update event")
@@ -217,11 +210,10 @@ async def update_event(
 
 @router.delete("/events")
 async def delete_event(
-    request: DeleteEventRequest,
-    user_id: str = Query(..., description="User ID")
+    request: DeleteEventRequest, user_id: str = Query(..., description="User ID")
 ):
     """Delete a calendar event"""
-    
+
     # Verify user exists
     user = user_service.get_user_by_id(user_id)
     if not user:
@@ -229,26 +221,24 @@ async def delete_event(
 
     try:
         result = await calendar_lambda_service.delete_event(
-            user_id=user_id,
-            event_id=request.event_id,
-            calendar_id=request.calendar_id
+            user_id=user_id, event_id=request.event_id, calendar_id=request.calendar_id
         )
-        
+
         if result["status"] == "authentication_required":
             return CalendarResponse(
                 status="authentication_required",
                 message=result["message"],
-                authorization_url=result["authorization_url"]
+                authorization_url=result["authorization_url"],
             )
         elif result["status"] == "success":
             return CalendarResponse(
                 status="success",
                 data=result["data"],
-                message="Event deleted successfully"
+                message="Event deleted successfully",
             )
         else:
             raise HTTPException(status_code=500, detail=result["message"])
-            
+
     except Exception as e:
         logger.error(f"Error deleting event: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete event")
@@ -259,15 +249,12 @@ async def get_available_tools():
     """Get list of available Calendar tools"""
     try:
         result = await calendar_lambda_service.list_available_tools()
-        
+
         if result["status"] == "success":
-            return CalendarResponse(
-                status="success",
-                data={"tools": result["tools"]}
-            )
+            return CalendarResponse(status="success", data={"tools": result["tools"]})
         else:
             raise HTTPException(status_code=500, detail=result["message"])
-            
+
     except Exception as e:
         logger.error(f"Error getting Calendar tools: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get Calendar tools") 
+        raise HTTPException(status_code=500, detail="Failed to get Calendar tools")

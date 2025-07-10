@@ -128,11 +128,9 @@ def get_user_credentials(user_id):
         logger.info(f"Looking for Calendar credentials for user: {user_id}")
         # Try google_calendar service first, then fallback to gmail
         response = table.get_item(Key={'user_id': user_id, 'service': 'google_calendar'})
-        
         if 'Item' not in response:
             logger.info(f"No google_calendar tokens found, trying gmail tokens for user {user_id}")
             response = table.get_item(Key={'user_id': user_id, 'service': 'gmail'})
-        
         logger.info(f"DynamoDB response status: {'Found' if 'Item' in response else 'Not Found'}")
 
         if 'Item' not in response:
@@ -259,7 +257,7 @@ def handle_tools_list():
                     }
                 },
                 {
-                    "name": "list_events", 
+                    "name": "list_events",
                     "description": "List events from a calendar",
                     "inputSchema": {
                         "type": "object",
@@ -286,14 +284,14 @@ def handle_tools_list():
                             "calendar_id": {"type": "string", "description": "Calendar ID", "default": "primary"},
                             "description": {"type": "string", "description": "Event description"},
                             "location": {"type": "string", "description": "Event location"},
-                            "attendees": {"type": "array", "items": {"type": "string"}, "description": "Attendee emails"}
+                            "attendees": {"type": "array", "items": {"type": "string"}, "description": "Attende emails"}
                         },
                         "required": ["user_id", "summary", "start_time", "end_time"]
                     }
                 },
                 {
                     "name": "update_event",
-                    "description": "Update an existing calendar event", 
+                    "description": "Update an existing calendar event",
                     "inputSchema": {
                         "type": "object",
                         "properties": {
@@ -353,7 +351,6 @@ def handle_tool_call(tool_name, arguments, request_id):
         if tool_name == "list_calendars":
             calendars_result = service.calendarList().list().execute()
             calendars = calendars_result.get("items", [])
-            
             calendar_list = []
             for calendar in calendars:
                 calendar_list.append({
@@ -385,7 +382,6 @@ def handle_tool_call(tool_name, arguments, request_id):
             start_time = arguments.get("start_time")
             end_time = arguments.get("end_time")
             calendar_id = arguments.get("calendar_id", "primary")
-            
             # Optional parameters
             description = arguments.get("description")
             location = arguments.get("location")
