@@ -9,7 +9,6 @@ The application is deployed on AWS Elastic Beanstalk and accessible at:
 - **API Documentation**: `https://your-app-name.eba-kzi5p2rc.region.elasticbeanstalk.com/docs`
 
 ## 📋 Table of Contents
-
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
