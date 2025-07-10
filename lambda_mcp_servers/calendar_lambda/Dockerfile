@@ -1,5 +1,5 @@
 # easydo_backend/lambda_mcp_servers/calendar_lambda/Dockerfile
-FROM public.ecr.aws/lambda/python:3.11
+FROM --platform=linux/amd64 public.ecr.aws/lambda/python:3.11
 
 # Install system dependencies
 RUN yum update -y && yum install -y gcc
