@@ -90,7 +90,7 @@ class EasydoAgent:
         logger.info(f"LLM response: {getattr(response, 'content', str(response))}")
         has_tool_calls = hasattr(response, "tool_calls") and response.tool_calls
         if has_tool_calls:
-            tool_names = [tc['name'] for tc in response.tool_calls]
+            tool_names = [tc["name"] for tc in response.tool_calls]
             logger.info(f"LLM requested tool calls: {tool_names}")
         else:
             logger.info("LLM did not request any tool calls.")

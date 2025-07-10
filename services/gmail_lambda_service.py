@@ -4,6 +4,7 @@ import logging
 from typing import Dict, Any
 from dotenv import load_dotenv
 from services.google_oauth import oauth_service
+
 """
 Gmail Lambda MCP Service - integrates Gmail MCP Lambda with OAuth flow
 """

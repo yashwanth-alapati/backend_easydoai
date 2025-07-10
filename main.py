@@ -44,9 +44,7 @@ async def lifespan(app: FastAPI):
             )
 
     except Exception as e:
-        print(
-            f">>> [LIFESPAN] ❌ An unexpected error occurred during startup: {str(e)}"
-        )
+        print(f">>> [LIFESPAN] ❌ An unexpected error occurred during startup: {str(e)}")
 
     print(">>> [LIFESPAN] Startup complete.")
     yield
