@@ -13,6 +13,7 @@ from mongodb_config import (
 )
 from auth_endpoints import router as auth_router
 from gmail_endpoints import router as gmail_router
+from calendar_endpoints import router as calendar_router
 
 
 # The new lifespan context manager to handle startup and shutdown.
@@ -78,12 +79,13 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router)
 app.include_router(gmail_router)
+app.include_router(calendar_router)
 
 
 # Root endpoint for Elastic Beanstalk health checks
 @app.get("/")
 def read_root():
-    return {"status": "ok", "version": "1.0", "services": ["gmail_mcp", "chat", "auth"]}
+    return {"status": "ok", "version": "1.0", "services": ["gmail_mcp", "calendar_mcp", "chat", "auth"]}
 
 
 class SignupRequest(BaseModel):
