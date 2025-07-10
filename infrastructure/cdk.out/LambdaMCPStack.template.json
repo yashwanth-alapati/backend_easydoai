@@ -1,0 +1,1208 @@
+{
+ "Resources": {
+  "MCPLambdaRole1F476102": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPLambdaRole/Resource"
+   }
+  },
+  "MCPLambdaRoleDefaultPolicy79E61CB5": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:Query"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:dynamodb:*:*:table/easydoai-user-tokens"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "MCPLambdaRoleDefaultPolicy79E61CB5",
+    "Roles": [
+     {
+      "Ref": "MCPLambdaRole1F476102"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPLambdaRole/DefaultPolicy/Resource"
+   }
+  },
+  "GmailMCPLambdaD2EF2F90": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ImageUri": {
+      "Fn::Join": [
+       "",
+       [
+        {
+         "Ref": "AWS::AccountId"
+        },
+        ".dkr.ecr.",
+        {
+         "Ref": "AWS::Region"
+        },
+        ".",
+        {
+         "Ref": "AWS::URLSuffix"
+        },
+        "/easydoai-gmail-mcp:latest"
+       ]
+      ]
+     }
+    },
+    "Environment": {
+     "Variables": {
+      "TOKENS_TABLE_NAME": "easydoai-user-tokens"
+     }
+    },
+    "MemorySize": 512,
+    "PackageType": "Image",
+    "Role": {
+     "Fn::GetAtt": [
+      "MCPLambdaRole1F476102",
+      "Arn"
+     ]
+    },
+    "Timeout": 30
+   },
+   "DependsOn": [
+    "MCPLambdaRoleDefaultPolicy79E61CB5",
+    "MCPLambdaRole1F476102"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/GmailMCPLambda/Resource"
+   }
+  },
+  "CalendarMCPLambdaC5011EA6": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ImageUri": {
+      "Fn::Join": [
+       "",
+       [
+        {
+         "Ref": "AWS::AccountId"
+        },
+        ".dkr.ecr.",
+        {
+         "Ref": "AWS::Region"
+        },
+        ".",
+        {
+         "Ref": "AWS::URLSuffix"
+        },
+        "/easydoai-calendar-mcp:latest"
+       ]
+      ]
+     }
+    },
+    "Environment": {
+     "Variables": {
+      "TOKENS_TABLE_NAME": "easydoai-user-tokens"
+     }
+    },
+    "MemorySize": 512,
+    "PackageType": "Image",
+    "Role": {
+     "Fn::GetAtt": [
+      "MCPLambdaRole1F476102",
+      "Arn"
+     ]
+    },
+    "Timeout": 30
+   },
+   "DependsOn": [
+    "MCPLambdaRoleDefaultPolicy79E61CB5",
+    "MCPLambdaRole1F476102"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/CalendarMCPLambda/Resource"
+   }
+  },
+  "MCPToolsAPID2DCA98F": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "Description": "API for MCP tool execution",
+    "Name": "EasyDoAI MCP Tools"
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Resource"
+   }
+  },
+  "MCPToolsAPICloudWatchRole38C421C5": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "apigateway.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+       ]
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/CloudWatchRole/Resource"
+   }
+  },
+  "MCPToolsAPIAccount21B5C2EB": {
+   "Type": "AWS::ApiGateway::Account",
+   "Properties": {
+    "CloudWatchRoleArn": {
+     "Fn::GetAtt": [
+      "MCPToolsAPICloudWatchRole38C421C5",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "MCPToolsAPID2DCA98F"
+   ],
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Account"
+   }
+  },
+  "MCPToolsAPIDeploymentA30CD2AB459f2cf6804fa67b108d013e0a57ee9b": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "API for MCP tool execution",
+    "RestApiId": {
+     "Ref": "MCPToolsAPID2DCA98F"
+    }
+   },
+   "DependsOn": [
+    "MCPToolsAPIcalendarGETFAB42326",
+    "MCPToolsAPIcalendarOPTIONS1CA84F80",
+    "MCPToolsAPIcalendarPOST9A80ABE8",
+    "MCPToolsAPIcalendar61E78BD4",
+    "MCPToolsAPIgmailGET7B1E56A7",
+    "MCPToolsAPIgmailOPTIONSAF571773",
+    "MCPToolsAPIgmailPOST2BCB1279",
+    "MCPToolsAPIgmail8C0B4AEA",
+    "MCPToolsAPIOPTIONSCED50D38"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Deployment/Resource"
+   }
+  },
+  "MCPToolsAPIDeploymentStageprodD225C3CB": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "MCPToolsAPIDeploymentA30CD2AB459f2cf6804fa67b108d013e0a57ee9b"
+    },
+    "RestApiId": {
+     "Ref": "MCPToolsAPID2DCA98F"
+    },
+    "StageName": "prod"
+   },
+   "DependsOn": [
+    "MCPToolsAPIAccount21B5C2EB"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/DeploymentStage.prod/Resource"
+   }
+  },
+  "MCPToolsAPIOPTIONSCED50D38": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "MCPToolsAPID2DCA98F",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "MCPToolsAPID2DCA98F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/OPTIONS/Resource"
+   }
+  },
+  "MCPToolsAPIgmail8C0B4AEA": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "MCPToolsAPID2DCA98F",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "gmail",
+    "RestApiId": {
+     "Ref": "MCPToolsAPID2DCA98F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/gmail/Resource"
+   }
+  },
+  "MCPToolsAPIgmailOPTIONSAF571773": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "MCPToolsAPIgmail8C0B4AEA"
+    },
+    "RestApiId": {
+     "Ref": "MCPToolsAPID2DCA98F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/gmail/OPTIONS/Resource"
+   }
+  },
+  "MCPToolsAPIgmailPOSTApiPermissionLambdaMCPStackMCPToolsAPIC206AF1APOSTgmailD6B914CA": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "GmailMCPLambdaD2EF2F90",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "MCPToolsAPID2DCA98F"
+       },
+       "/",
+       {
+        "Ref": "MCPToolsAPIDeploymentStageprodD225C3CB"
+       },
+       "/POST/gmail"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/gmail/POST/ApiPermission.LambdaMCPStackMCPToolsAPIC206AF1A.POST..gmail"
+   }
+  },
+  "MCPToolsAPIgmailPOSTApiPermissionTestLambdaMCPStackMCPToolsAPIC206AF1APOSTgmail4D68BD26": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "GmailMCPLambdaD2EF2F90",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "MCPToolsAPID2DCA98F"
+       },
+       "/test-invoke-stage/POST/gmail"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/gmail/POST/ApiPermission.Test.LambdaMCPStackMCPToolsAPIC206AF1A.POST..gmail"
+   }
+  },
+  "MCPToolsAPIgmailPOST2BCB1279": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "GmailMCPLambdaD2EF2F90",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "MCPToolsAPIgmail8C0B4AEA"
+    },
+    "RestApiId": {
+     "Ref": "MCPToolsAPID2DCA98F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/gmail/POST/Resource"
+   }
+  },
+  "MCPToolsAPIgmailGETApiPermissionLambdaMCPStackMCPToolsAPIC206AF1AGETgmail12A941BA": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "GmailMCPLambdaD2EF2F90",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "MCPToolsAPID2DCA98F"
+       },
+       "/",
+       {
+        "Ref": "MCPToolsAPIDeploymentStageprodD225C3CB"
+       },
+       "/GET/gmail"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/gmail/GET/ApiPermission.LambdaMCPStackMCPToolsAPIC206AF1A.GET..gmail"
+   }
+  },
+  "MCPToolsAPIgmailGETApiPermissionTestLambdaMCPStackMCPToolsAPIC206AF1AGETgmail2AA454CC": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "GmailMCPLambdaD2EF2F90",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "MCPToolsAPID2DCA98F"
+       },
+       "/test-invoke-stage/GET/gmail"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/gmail/GET/ApiPermission.Test.LambdaMCPStackMCPToolsAPIC206AF1A.GET..gmail"
+   }
+  },
+  "MCPToolsAPIgmailGET7B1E56A7": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "GmailMCPLambdaD2EF2F90",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "MCPToolsAPIgmail8C0B4AEA"
+    },
+    "RestApiId": {
+     "Ref": "MCPToolsAPID2DCA98F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/gmail/GET/Resource"
+   }
+  },
+  "MCPToolsAPIcalendar61E78BD4": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "MCPToolsAPID2DCA98F",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "calendar",
+    "RestApiId": {
+     "Ref": "MCPToolsAPID2DCA98F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/calendar/Resource"
+   }
+  },
+  "MCPToolsAPIcalendarOPTIONS1CA84F80": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "MCPToolsAPIcalendar61E78BD4"
+    },
+    "RestApiId": {
+     "Ref": "MCPToolsAPID2DCA98F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/calendar/OPTIONS/Resource"
+   }
+  },
+  "MCPToolsAPIcalendarPOSTApiPermissionLambdaMCPStackMCPToolsAPIC206AF1APOSTcalendar6C549F2C": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "CalendarMCPLambdaC5011EA6",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "MCPToolsAPID2DCA98F"
+       },
+       "/",
+       {
+        "Ref": "MCPToolsAPIDeploymentStageprodD225C3CB"
+       },
+       "/POST/calendar"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/calendar/POST/ApiPermission.LambdaMCPStackMCPToolsAPIC206AF1A.POST..calendar"
+   }
+  },
+  "MCPToolsAPIcalendarPOSTApiPermissionTestLambdaMCPStackMCPToolsAPIC206AF1APOSTcalendar8C0CD766": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "CalendarMCPLambdaC5011EA6",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "MCPToolsAPID2DCA98F"
+       },
+       "/test-invoke-stage/POST/calendar"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/calendar/POST/ApiPermission.Test.LambdaMCPStackMCPToolsAPIC206AF1A.POST..calendar"
+   }
+  },
+  "MCPToolsAPIcalendarPOST9A80ABE8": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "CalendarMCPLambdaC5011EA6",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "MCPToolsAPIcalendar61E78BD4"
+    },
+    "RestApiId": {
+     "Ref": "MCPToolsAPID2DCA98F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/calendar/POST/Resource"
+   }
+  },
+  "MCPToolsAPIcalendarGETApiPermissionLambdaMCPStackMCPToolsAPIC206AF1AGETcalendarC332A7F0": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "CalendarMCPLambdaC5011EA6",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "MCPToolsAPID2DCA98F"
+       },
+       "/",
+       {
+        "Ref": "MCPToolsAPIDeploymentStageprodD225C3CB"
+       },
+       "/GET/calendar"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/calendar/GET/ApiPermission.LambdaMCPStackMCPToolsAPIC206AF1A.GET..calendar"
+   }
+  },
+  "MCPToolsAPIcalendarGETApiPermissionTestLambdaMCPStackMCPToolsAPIC206AF1AGETcalendarDC6078F0": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "CalendarMCPLambdaC5011EA6",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "MCPToolsAPID2DCA98F"
+       },
+       "/test-invoke-stage/GET/calendar"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/calendar/GET/ApiPermission.Test.LambdaMCPStackMCPToolsAPIC206AF1A.GET..calendar"
+   }
+  },
+  "MCPToolsAPIcalendarGETFAB42326": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "CalendarMCPLambdaC5011EA6",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "MCPToolsAPIcalendar61E78BD4"
+    },
+    "RestApiId": {
+     "Ref": "MCPToolsAPID2DCA98F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/MCPToolsAPI/Default/calendar/GET/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/1WOwU7EMAxEv2XvaWjhwHnZFRIHRFU+AGVTU0yTOEocraqq/06aLqKc/GbsZOZeNnUt64O6xkr3Y2XwIud3VnoU2fqYQQfZgaeITGF6UhEEKivnjgyI06crsyWDelrlRoswyl56Jecz6RHCi1UDPCenGcmtZ3tuIViMMatFKI+DYriqKSdA5KPHEvKHR60pORZn8IYmCxmzu1O5+1CabZCfUgoaSvNX4C/q1+WNfre3kMLL8s9+S+wT7w9WPpHrkUvndspfubsH2TTy8fAdEauQG6IF2W3zB/MCWGtkAQAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "LambdaMCPStack/CDKMetadata/Default"
+   },
+   "Condition": "CDKMetadataAvailable"
+  }
+ },
+ "Outputs": {
+  "MCPToolsAPIEndpoint3AB5F5E2": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "MCPToolsAPID2DCA98F"
+      },
+      ".execute-api.",
+      {
+       "Ref": "AWS::Region"
+      },
+      ".",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "MCPToolsAPIDeploymentStageprodD225C3CB"
+      },
+      "/"
+     ]
+    ]
+   }
+  }
+ },
+ "Conditions": {
+  "CDKMetadataAvailable": {
+   "Fn::Or": [
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "af-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-northwest-1"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "sa-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-2"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-west-2"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

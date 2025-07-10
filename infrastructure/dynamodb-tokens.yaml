@@ -1,0 +1,56 @@
+# infrastructure/dynamodb-tokens.yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'DynamoDB table for storing EasyDoAI user OAuth tokens'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Environment name
+
+Resources:
+  UserTokensTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'easydoai-user-tokens-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+        - AttributeName: service
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+        - AttributeName: service
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      Tags:
+        - Key: Project
+          Value: EasyDoAI
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Purpose
+          Value: OAuth Token Storage
+
+Outputs:
+  UserTokensTableName:
+    Description: Name of the DynamoDB table for user tokens
+    Value: !Ref UserTokensTable
+    Export:
+      Name: !Sub "${AWS::StackName}-UserTokensTable"
+  
+  UserTokensTableArn:
+    Description: ARN of the DynamoDB table for user tokens
+    Value: !GetAtt UserTokensTable.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-UserTokensTableArn"

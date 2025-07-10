@@ -1,0 +1,233 @@
+{
+  "version": "34.0.0",
+  "artifacts": {
+    "LambdaMCPStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "LambdaMCPStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "LambdaMCPStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/unknown-region",
+      "properties": {
+        "templateFile": "LambdaMCPStack.template.json",
+        "terminationProtection": false,
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/cabe28a39e42cbd1c4a9f2197e5a87cf07eea8b63b0693b52fe9cde508f674ca.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "LambdaMCPStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-${AWS::Region}",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "LambdaMCPStack.assets"
+      ],
+      "metadata": {
+        "/LambdaMCPStack/MCPLambdaRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPLambdaRole1F476102"
+          }
+        ],
+        "/LambdaMCPStack/MCPLambdaRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPLambdaRoleDefaultPolicy79E61CB5"
+          }
+        ],
+        "/LambdaMCPStack/GmailMCPLambda/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "GmailMCPLambdaD2EF2F90"
+          }
+        ],
+        "/LambdaMCPStack/CalendarMCPLambda/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CalendarMCPLambdaC5011EA6"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPID2DCA98F"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/CloudWatchRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPICloudWatchRole38C421C5"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Account": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIAccount21B5C2EB"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Deployment/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIDeploymentA30CD2AB459f2cf6804fa67b108d013e0a57ee9b"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/DeploymentStage.prod/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIDeploymentStageprodD225C3CB"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Endpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIEndpoint3AB5F5E2"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIOPTIONSCED50D38"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/gmail/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIgmail8C0B4AEA"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/gmail/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIgmailOPTIONSAF571773"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/gmail/POST/ApiPermission.LambdaMCPStackMCPToolsAPIC206AF1A.POST..gmail": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIgmailPOSTApiPermissionLambdaMCPStackMCPToolsAPIC206AF1APOSTgmailD6B914CA"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/gmail/POST/ApiPermission.Test.LambdaMCPStackMCPToolsAPIC206AF1A.POST..gmail": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIgmailPOSTApiPermissionTestLambdaMCPStackMCPToolsAPIC206AF1APOSTgmail4D68BD26"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/gmail/POST/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIgmailPOST2BCB1279"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/gmail/GET/ApiPermission.LambdaMCPStackMCPToolsAPIC206AF1A.GET..gmail": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIgmailGETApiPermissionLambdaMCPStackMCPToolsAPIC206AF1AGETgmail12A941BA"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/gmail/GET/ApiPermission.Test.LambdaMCPStackMCPToolsAPIC206AF1A.GET..gmail": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIgmailGETApiPermissionTestLambdaMCPStackMCPToolsAPIC206AF1AGETgmail2AA454CC"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/gmail/GET/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIgmailGET7B1E56A7"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/calendar/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIcalendar61E78BD4"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/calendar/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIcalendarOPTIONS1CA84F80"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/calendar/POST/ApiPermission.LambdaMCPStackMCPToolsAPIC206AF1A.POST..calendar": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIcalendarPOSTApiPermissionLambdaMCPStackMCPToolsAPIC206AF1APOSTcalendar6C549F2C"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/calendar/POST/ApiPermission.Test.LambdaMCPStackMCPToolsAPIC206AF1A.POST..calendar": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIcalendarPOSTApiPermissionTestLambdaMCPStackMCPToolsAPIC206AF1APOSTcalendar8C0CD766"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/calendar/POST/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIcalendarPOST9A80ABE8"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/calendar/GET/ApiPermission.LambdaMCPStackMCPToolsAPIC206AF1A.GET..calendar": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIcalendarGETApiPermissionLambdaMCPStackMCPToolsAPIC206AF1AGETcalendarC332A7F0"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/calendar/GET/ApiPermission.Test.LambdaMCPStackMCPToolsAPIC206AF1A.GET..calendar": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIcalendarGETApiPermissionTestLambdaMCPStackMCPToolsAPIC206AF1AGETcalendarDC6078F0"
+          }
+        ],
+        "/LambdaMCPStack/MCPToolsAPI/Default/calendar/GET/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPToolsAPIcalendarGETFAB42326"
+          }
+        ],
+        "/LambdaMCPStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/LambdaMCPStack/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/LambdaMCPStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/LambdaMCPStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "LambdaMCPStack"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    }
+  }
+}

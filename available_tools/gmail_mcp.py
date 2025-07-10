@@ -2,49 +2,67 @@ from langchain.tools import Tool
 from pydantic import BaseModel, Field
 from typing import Any, Dict
 import asyncio
-from contextlib import AsyncExitStack  # <-- Add this import!
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
-
+import json
+from services.gmail_lambda_service import gmail_lambda_service
 
 class GmailMCPInput(BaseModel):
-    tool: str = Field(
-        description="The Gmail MCP tool to call, e.g. 'send_email', 'search_emails', etc."
+    action: str = Field(
+        description="Gmail action: 'get_messages', 'send_message', or 'list_tools'"
     )
-    args: Dict[str, Any] = Field(description="Arguments for the Gmail MCP tool.")
+    user_id: str = Field(description="User ID for Gmail access")
+    # Optional parameters for different actions
+    query: str = Field(default="", description="Search query for get_messages")
+    max_results: int = Field(default=10, description="Max results for get_messages")
+    to: str = Field(default="", description="Recipient email for send_message")
+    subject: str = Field(default="", description="Email subject for send_message")
+    body: str = Field(default="", description="Email body for send_message")
 
-
-def gmail_mcp_func(tool: str, args: Dict[str, Any]) -> Any:
+def gmail_mcp_func(action: str, user_id: str, **kwargs) -> Any:
+    """
+    Enhanced Gmail MCP function that integrates with Lambda and OAuth
+    """
     async def run():
-        async with AsyncExitStack() as stack:
-            server_params = StdioServerParameters(
-                command="npx", args=["@gongrzhe/server-gmail-autoauth-mcp"], env=None
-            )
-            stdio_transport = await stack.enter_async_context(
-                stdio_client(server_params)
-            )
-            stdio, write = stdio_transport
-            session = await stack.enter_async_context(ClientSession(stdio, write))
-            await session.initialize()
-            result = await session.call_tool(tool, args)
-            # Convert result to plain dict or string
-            if hasattr(result, "content"):
-                # If result.content is a list of TextContent, join their text
-                if isinstance(result.content, list):
-                    return "\n".join(
-                        getattr(item, "text", str(item)) for item in result.content
-                    )
-                # If it's a single TextContent
-                return getattr(result.content, "text", str(result.content))
-            return str(result)
-
+        try:
+            if action == "get_messages":
+                result = await gmail_lambda_service.get_gmail_messages(
+                    user_id=user_id,
+                    query=kwargs.get("query", ""),
+                    max_results=kwargs.get("max_results", 10)
+                )
+            elif action == "send_message":
+                if not all([kwargs.get("to"), kwargs.get("subject"), kwargs.get("body")]):
+                    return {
+                        'status': 'error',
+                        'message': 'send_message requires: to, subject, and body'
+                    }
+                result = await gmail_lambda_service.send_gmail_message(
+                    user_id=user_id,
+                    to=kwargs["to"],
+                    subject=kwargs["subject"],
+                    body=kwargs["body"]
+                )
+            elif action == "list_tools":
+                result = await gmail_lambda_service.list_available_tools()
+            else:
+                return {
+                    'status': 'error',
+                    'message': f"Unknown action: {action}. Use 'get_messages', 'send_message', or 'list_tools'"
+                }
+            
+            return result
+        
+        except Exception as e:
+            return {
+                'status': 'error',
+                'message': f"Gmail tool error: {str(e)}"
+            }
+    
     return asyncio.run(run())
-
 
 def get_tool() -> Tool:
     return Tool(
         name="gmail_mcp",
-        description="Call any Gmail MCP tool (send, search, label, etc). Args: tool (str), args (dict).",
+        description="Access Gmail via Lambda MCP server. Actions: get_messages (query, max_results), send_message (to, subject, body), list_tools. Always requires user_id.",
         func=gmail_mcp_func,
         args_schema=GmailMCPInput,
     )

@@ -1,0 +1,19 @@
+{
+  "version": "34.0.0",
+  "files": {
+    "cabe28a39e42cbd1c4a9f2197e5a87cf07eea8b63b0693b52fe9cde508f674ca": {
+      "source": {
+        "path": "LambdaMCPStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-current_region": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "cabe28a39e42cbd1c4a9f2197e5a87cf07eea8b63b0693b52fe9cde508f674ca.json",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

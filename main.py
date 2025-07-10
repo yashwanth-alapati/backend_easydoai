@@ -11,6 +11,8 @@ from mongodb_config import (
     close_mongodb_connection,
     is_mongodb_available,
 )
+from auth_endpoints import router as auth_router
+from gmail_endpoints import router as gmail_router
 
 
 # The new lifespan context manager to handle startup and shutdown.
@@ -19,6 +21,19 @@ async def lifespan(app: FastAPI):
     # --- STARTUP LOGIC ---
     print(">>> [LIFESPAN] Starting up application...")
     try:
+        # Check required environment variables
+        required_env_vars = [
+            'EASYDOAI_GOOGLE_CLIENT_ID',
+            'EASYDOAI_GOOGLE_CLIENT_SECRET',
+            'EASYDOAI_GOOGLE_REDIRECT_URI'
+        ]
+
+        missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+        if missing_vars:
+            print(f">>> [LIFESPAN] ⚠️ Missing environment variables: {missing_vars}")
+        else:
+            print(">>> [LIFESPAN] ✅ All required OAuth environment variables found")
+
         # Initialize MongoDB connection
         print(">>> [LIFESPAN] Initializing MongoDB connection...")
         if is_mongodb_available():
@@ -46,8 +61,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# Read CORS origins from environment variable
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+# Read CORS origins from environment variable - UPDATE FOR PRODUCTION
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,https://tachyfy.com").split(",")
 allowed_origins = [origin.strip() for origin in allowed_origins]
 
 app.add_middleware(
@@ -58,11 +73,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include routers
+app.include_router(auth_router)
+app.include_router(gmail_router)
+
 
 # Root endpoint for Elastic Beanstalk health checks
 @app.get("/")
 def read_root():
-    return {"status": "ok"}
+    return {"status": "ok", "version": "1.0", "services": ["gmail_mcp", "chat", "auth"]}
 
 
 class SignupRequest(BaseModel):
@@ -202,10 +221,12 @@ async def create_task_with_message(
     # Add the user message
     chat_service.add_message(session_id, user["id"], "user", req.message)
 
-    # Process with agent WITH conversation history
+    # Process with agent WITH conversation history AND user_id
     agent = EasydoAgent()
     reply = await agent.process_message(
-        req.message, conversation_history=conversation_history
+        req.message, 
+        conversation_history=conversation_history,
+        user_id=user["id"]  # Pass user_id to agent
     )
 
     # Add agent response
@@ -277,10 +298,12 @@ async def add_message(task_id: str, req: Request):
     # Add user message
     chat_service.add_message(task_id, user["id"], "user", user_message)
 
-    # Get assistant reply WITH conversation history
+    # Get assistant reply WITH conversation history AND user_id
     agent = EasydoAgent()
     reply = await agent.process_message(
-        user_message, conversation_history=conversation_history
+        user_message, 
+        conversation_history=conversation_history,
+        user_id=user["id"]  # Pass user_id to agent
     )
 
     # Add assistant response
@@ -329,4 +352,9 @@ def health_check():
     return {
         "status": "healthy",
         "mongodb_available": is_mongodb_available(),
+        "services": {
+            "gmail_mcp": "available",
+            "auth": "available", 
+            "chat": "available" if is_mongodb_available() else "limited"
+        }
     }

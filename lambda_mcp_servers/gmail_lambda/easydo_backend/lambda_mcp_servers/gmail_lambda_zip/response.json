@@ -1,0 +1,1 @@
+{"jsonrpc": "2.0", "id": "1", "error": {"code": -32603, "message": "MCP server process failed with code 1", "data": {"stderr": "  File \"/tmp/tmp4q_j3pr8.py\", line 3\n    \"\"\"\nIndentationError: unexpected indent\n"}}}

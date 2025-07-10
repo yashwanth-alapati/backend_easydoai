@@ -1,0 +1,8 @@
+# easydo_backend/lambda_mcp_servers/calendar_lambda/requirements.txt
+fastmcp==2.9.2
+google-auth==2.23.0
+google-auth-oauthlib==1.0.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.95.0
+googleapis-common-protos==1.60.0
+boto3==1.26.137
