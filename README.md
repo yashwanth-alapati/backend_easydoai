@@ -1,7 +1,8 @@
-[![Coverage Status](https://coveralls.io/repos/github/yashwanth-alapati/backend_easydoai/badge.svg)](https://coveralls.io/github/yashwanth-alapati/backend_easydoai)
-# EasyDoAI Backend
+[![Coverage Status](https://coveralls.io/repos/github/yashwanth-alapati/backend_tachify/badge.svg)](https://coveralls.io/github/yashwanth-alapati/backend_tachify)
 
-A FastAPI-based backend service for the EasyDo AI application, providing intelligent task management and AI-powered assistance through various integrated tools including Gmail, Google Calendar, and web search capabilities.
+# Tachify Backend
+
+A FastAPI-based backend service for the Tachify AI application, providing intelligent task management and AI-powered assistance through various integrated tools including Gmail, Google Calendar, and web search capabilities.
 ## 🚀 Live Deployment
 
 The application is deployed on AWS Elastic Beanstalk and accessible at:

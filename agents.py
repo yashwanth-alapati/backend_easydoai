@@ -3,7 +3,7 @@ LangGraph agent for orchestrating the easydo.ai chatbot.
 """
 
 import logging
-from typing import Dict, Any, List, Sequence, TypedDict
+from typing import Dict, Any, List, Sequence, TypedDict, Optional
 from langchain_anthropic import ChatAnthropic
 from langchain.schema import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langchain_core.messages import ToolMessage
@@ -37,7 +37,7 @@ class AgentState(TypedDict):
 class EasydoAgent:
     """Main agent using LangGraph for easydo.ai"""
 
-    def __init__(self):
+    def __init__(self, selected_tools: Optional[List[str]] = None):
         logger.info("Initializing EasydoAgent")
         self.llm = ChatAnthropic(
             model="claude-3-opus-20240229",
@@ -45,11 +45,26 @@ class EasydoAgent:
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
         )
         logger.info("Loaded Claude model for LLM.")
-        self.tools = get_tools()
+        
+        # Load tools based on selection
+        self.tools = get_tools(selected_tools)
         logger.info(f"Loaded tools: {list(tool.name for tool in self.tools)}")
+        
+        # If no tools selected, provide a helpful message
+        if selected_tools is not None and len(selected_tools) == 0:
+            logger.info("No tools selected - agent will work in text-only mode")
+        elif selected_tools is not None and len(self.tools) == 0:
+            logger.warning(f"Selected tools {selected_tools} not found - agent will work in text-only mode")
+        
         self.tools_by_name = {tool.name: tool for tool in self.tools}
-        self.llm_with_tools = self.llm.bind_tools(self.tools)
-        logger.info("Bound tools to LLM.")
+        
+        # Only bind tools if we have any
+        if self.tools:
+            self.llm_with_tools = self.llm.bind_tools(self.tools)
+        else:
+            self.llm_with_tools = self.llm
+            
+        logger.info("Tools bound to LLM.")
         self.graph = self._build_graph()
         logger.info("LangGraph workflow built.")
 
@@ -75,11 +90,18 @@ class EasydoAgent:
 
         if not messages or not isinstance(messages[0], SystemMessage):
             current_date = datetime.now().strftime("%B %d, %Y")
-            # Enhanced system message with user context
+            # Enhanced system message with user context and tool information
             system_content = f"You are easydo.ai, an agentic productivity assistant. Today's date is {current_date}."
 
             if user_context.get("user_id"):
-                system_content += f"\n\nIMPORTANT: When using Gmail tools,always use user_id: {user_context['user_id']}"
+                system_content += f"\n\nIMPORTANT: When using Gmail tools, always use user_id: {user_context['user_id']}"
+
+            # Add tool availability information
+            if self.tools:
+                tool_names = [tool.name for tool in self.tools]
+                system_content += f"\n\nYou have access to the following tools: {', '.join(tool_names)}"
+            else:
+                system_content += "\n\nYou are operating in text-only mode. You cannot use external tools, but you can still help with general questions and advice."
 
             system_message = SystemMessage(content=system_content)
             messages = [system_message] + list(messages)
@@ -88,12 +110,20 @@ class EasydoAgent:
         logger.info(f"Messages to LLM: {[m.content for m in messages]}")
         response = self.llm_with_tools.invoke(messages)
         logger.info(f"LLM response: {getattr(response, 'content', str(response))}")
-        has_tool_calls = hasattr(response, "tool_calls") and response.tool_calls
+        
+        # Check for tool calls only if we have tools
+        has_tool_calls = (
+            self.tools and 
+            hasattr(response, "tool_calls") and 
+            response.tool_calls
+        )
+        
         if has_tool_calls:
             tool_names = [tc["name"] for tc in response.tool_calls]
             logger.info(f"LLM requested tool calls: {tool_names}")
         else:
             logger.info("LLM did not request any tool calls.")
+            
         return {
             "messages": messages + [response],
             "next_action": "tools" if has_tool_calls else "final",
@@ -183,9 +213,9 @@ class EasydoAgent:
                         )
                         tool_messages.append(tool_message)
                 else:
-                    logger.error(f"Tool '{tool_name}' not found.")
+                    logger.error(f"Tool '{tool_name}' not found in selected tools.")
                     tool_message = ToolMessage(
-                        content=json.dumps({"error": "Tool not found"}),
+                        content=json.dumps({"error": f"Tool '{tool_name}' not available. Please select this tool first."}),
                         tool_call_id=tool_call_id,
                         name=tool_name,
                     )

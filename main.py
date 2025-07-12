@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
+from typing import List, Optional
 from agents import EasydoAgent
 from langchain.schema import HumanMessage, AIMessage
 from chat_service import ChatService
@@ -110,6 +111,7 @@ class ChatRequest(BaseModel):
 class TaskMessageRequest(BaseModel):
     message: str
     email: EmailStr
+    selected_tools: Optional[List[str]] = []  # Add selected tools
 
 
 @app.post("/signup")
@@ -229,12 +231,12 @@ async def create_task_with_message(
     # Add the user message
     chat_service.add_message(session_id, user["id"], "user", req.message)
 
-    # Process with agent WITH conversation history AND user_id
-    agent = EasydoAgent()
+    # Process with agent WITH conversation history AND user_id AND selected tools
+    agent = EasydoAgent(selected_tools=req.selected_tools)
     reply = await agent.process_message(
         req.message,
         conversation_history=conversation_history,
-        user_id=user["id"],  # Pass user_id to agent
+        user_id=user["id"],
     )
 
     # Add agent response
@@ -273,6 +275,7 @@ async def add_message(task_id: str, req: Request):
     data = await req.json()
     user_message = data.get("message")
     email = data.get("email")
+    selected_tools = data.get("selected_tools", [])  # Get selected tools
 
     if not user_message or not email:
         raise HTTPException(status_code=400, detail="Message and email required")
@@ -306,12 +309,12 @@ async def add_message(task_id: str, req: Request):
     # Add user message
     chat_service.add_message(task_id, user["id"], "user", user_message)
 
-    # Get assistant reply WITH conversation history AND user_id
-    agent = EasydoAgent()
+    # Get assistant reply WITH conversation history AND user_id AND selected tools
+    agent = EasydoAgent(selected_tools=selected_tools)
     reply = await agent.process_message(
         user_message,
         conversation_history=conversation_history,
-        user_id=user["id"],  # Pass user_id to agent
+        user_id=user["id"],
     )
 
     # Add assistant response
@@ -352,6 +355,18 @@ def get_task_messages(task_id: str):
     ]
 
     return {"messages": formatted_messages}
+
+
+@app.get("/available-tools")
+def get_available_tools():
+    """Get list of all available tools"""
+    from tools import get_available_tool_names
+    try:
+        tool_names = get_available_tool_names()
+        return {"tools": tool_names}
+    except Exception as e:
+        print(f"Error getting available tools: {e}")
+        return {"tools": []}
 
 
 @app.get("/health")
