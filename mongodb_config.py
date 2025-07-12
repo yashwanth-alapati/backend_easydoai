@@ -19,6 +19,13 @@ _database: Optional[Database] = None
 
 logger = logging.getLogger(__name__)
 
+# Task state constants
+class TaskState:
+    """Task state constants for chat sessions"""
+    PROCESSING = -1  # When AI is working in the background
+    REQUIRE_PERMISSION = 0  # When AI finishes and outputs a message
+    COMPLETE = 1  # When user clicks 'complete task' button
+
 
 def get_mongodb_client() -> Optional[MongoClient]:
     """Get MongoDB client instance (singleton) - returns None if connection fails"""
@@ -114,7 +121,7 @@ class ChatSession:
             "user_id": user_id,
             "title": title,
             "session_type": session_type,
-            "status": "active",
+            "state": TaskState.PROCESSING,  # Start with processing state
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
             "message_count": 0,

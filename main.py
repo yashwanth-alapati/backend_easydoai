@@ -11,6 +11,7 @@ from user_service import user_service
 from mongodb_config import (
     close_mongodb_connection,
     is_mongodb_available,
+    TaskState,
 )
 from auth_endpoints import router as auth_router
 from gmail_endpoints import router as gmail_router
@@ -81,6 +82,19 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(gmail_router)
 app.include_router(calendar_router)
+
+
+# Helper function to map state to frontend status
+def map_state_to_status(state: int) -> str:
+    """Map backend state to frontend status"""
+    if state == TaskState.PROCESSING:
+        return "processing"
+    elif state == TaskState.REQUIRE_PERMISSION:
+        return "needs_permission"
+    elif state == TaskState.COMPLETE:
+        return "complete"
+    else:
+        return "unknown"
 
 
 # Root endpoint for Elastic Beanstalk health checks
@@ -165,7 +179,8 @@ def list_tasks(email: str = Query(None)):
             {
                 "id": session["_id"],
                 "title": session["title"],
-                "status": "complete",
+                "status": map_state_to_status(session.get("state", TaskState.REQUIRE_PERMISSION)),
+                "state": session.get("state", TaskState.REQUIRE_PERMISSION),
                 "messages": [],
                 "user_id": session["user_id"],
                 "created_at": (
@@ -208,6 +223,9 @@ async def create_task_with_message(
 
         print(f">>> Continuing existing session: {session_id}")
 
+        # Set session to processing state when user sends a message
+        chat_service.set_session_processing(session_id)
+
         # Get conversation history
         session_messages = chat_service.get_session_messages(session_id)
         conversation_history = []
@@ -222,7 +240,7 @@ async def create_task_with_message(
         print(f">>> Loaded {len(conversation_history)} messages from history")
 
     else:
-        # Create new session
+        # Create new session (starts with processing state by default)
         title = " ".join(req.message.split()[:7])
         session_id = chat_service.create_chat_session(user["id"], title)
         conversation_history = []
@@ -242,6 +260,9 @@ async def create_task_with_message(
     # Add agent response
     chat_service.add_message(session_id, user["id"], "assistant", reply)
 
+    # Set session to require permission state after AI responds
+    chat_service.set_session_require_permission(session_id)
+
     # Get all messages to return
     all_messages = chat_service.get_session_messages(session_id)
     formatted_messages = [
@@ -254,7 +275,8 @@ async def create_task_with_message(
     return {
         "id": session_id,
         "title": session.get("title", "Chat Session"),
-        "status": "complete",
+        "status": map_state_to_status(session.get("state", TaskState.REQUIRE_PERMISSION)),
+        "state": session.get("state", TaskState.REQUIRE_PERMISSION),
         "messages": formatted_messages,
         "user_id": user["id"],
         "created_at": (
@@ -291,6 +313,9 @@ async def add_message(task_id: str, req: Request):
     if not session or session["user_id"] != user["id"]:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    # Set session to processing state when user sends a message
+    chat_service.set_session_processing(task_id)
+
     # Get conversation history before adding new message
     session_messages = chat_service.get_session_messages(task_id)
     conversation_history = []
@@ -320,6 +345,9 @@ async def add_message(task_id: str, req: Request):
     # Add assistant response
     chat_service.add_message(task_id, user["id"], "assistant", reply)
 
+    # Set session to require permission state after AI responds
+    chat_service.set_session_require_permission(task_id)
+
     # Get all messages for this session
     messages = chat_service.get_session_messages(task_id)
 
@@ -329,6 +357,40 @@ async def add_message(task_id: str, req: Request):
     ]
 
     return {"messages": formatted_messages}
+
+
+@app.post("/tasks/{task_id}/complete")
+async def complete_task(task_id: str, req: Request):
+    """Mark a task as complete"""
+    if not is_mongodb_available():
+        raise HTTPException(
+            status_code=503, detail="Chat service is currently unavailable"
+        )
+
+    data = await req.json()
+    email = data.get("email")
+
+    if not email:
+        raise HTTPException(status_code=400, detail="Email required")
+
+    user = user_service.get_user_by_email(email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    chat_service = ChatService()
+
+    # Verify session exists and belongs to user
+    session = chat_service.get_session_by_id(task_id)
+    if not session or session["user_id"] != user["id"]:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # Set session to complete state
+    success = chat_service.set_session_complete(task_id)
+    
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to complete task")
+
+    return {"message": "Task completed successfully", "task_id": task_id}
 
 
 @app.get("/tasks/{task_id}/messages")

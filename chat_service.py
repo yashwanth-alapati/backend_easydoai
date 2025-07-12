@@ -5,6 +5,7 @@ from mongodb_config import (
     is_mongodb_available,
     ChatMessage,
     ChatSession,
+    TaskState,
 )
 from bson import ObjectId
 from datetime import datetime
@@ -84,6 +85,34 @@ class ChatService:
         except Exception as e:
             logger.error(f"Error adding message: {e}")
             raise
+
+    def update_session_state(self, session_id: str, state: int) -> bool:
+        """Update the state of a chat session"""
+        try:
+            self._check_mongodb_available()
+            result = self.sessions_collection.update_one(
+                {"_id": ObjectId(session_id)},
+                {"$set": {"state": state, "updated_at": datetime.utcnow()}},
+            )
+            success = result.modified_count > 0
+            if success:
+                logger.info(f"Updated session {session_id} state to {state}")
+            return success
+        except Exception as e:
+            logger.error(f"Error updating session state: {e}")
+            raise
+
+    def set_session_processing(self, session_id: str) -> bool:
+        """Set session to processing state"""
+        return self.update_session_state(session_id, TaskState.PROCESSING)
+
+    def set_session_require_permission(self, session_id: str) -> bool:
+        """Set session to require permission state"""
+        return self.update_session_state(session_id, TaskState.REQUIRE_PERMISSION)
+
+    def set_session_complete(self, session_id: str) -> bool:
+        """Set session to complete state"""
+        return self.update_session_state(session_id, TaskState.COMPLETE)
 
     def get_session_messages(
         self, session_id: str, limit: int = 50, skip: int = 0
