@@ -361,6 +361,7 @@ def get_task_messages(task_id: str):
 def get_available_tools():
     """Get list of all available tools"""
     from tools import get_available_tool_names
+
     try:
         tool_names = get_available_tool_names()
         return {"tools": tool_names}

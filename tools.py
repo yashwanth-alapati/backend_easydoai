@@ -15,12 +15,12 @@ def get_tools(selected_tools: Optional[List[str]] = None) -> List[Tool]:
     """
     Dynamically load tools from the available_tools directory.
     Each tool module should define a `get_tool()` function that returns a Tool instance.
-    
+
     Args:
         selected_tools: List of tool names to include. If None, all tools are included.
     """
     all_tools = []
-    
+
     # Load all available tools
     for filename in os.listdir(AVAILABLE_TOOLS_DIR):
         if filename.endswith(".py") and not filename.startswith("__"):
@@ -32,18 +32,20 @@ def get_tools(selected_tools: Optional[List[str]] = None) -> List[Tool]:
                     all_tools.append(tool)
             except Exception as e:
                 print(f"Error loading tool {module_name}: {e}")
-    
+
     # Filter tools based on selection
     if selected_tools is None:
         return all_tools
-    
+
     # Filter tools by name
     filtered_tools = []
     for tool in all_tools:
         if tool.name in selected_tools:
             filtered_tools.append(tool)
-    
-    print(f"Filtered tools: {[tool.name for tool in filtered_tools]} from selected: {selected_tools}")
+
+    print(
+        f"Filtered tools: {[tool.name for tool in filtered_tools]} from selected: {selected_tools}"
+    )
     return filtered_tools
 
 
