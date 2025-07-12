@@ -40,7 +40,7 @@ class EasydoAgent:
     def __init__(self, selected_tools: Optional[List[str]] = None):
         logger.info("Initializing EasydoAgent")
         self.llm = ChatAnthropic(
-            model="claude-3-opus-20240229",
+            model="claude-3-5-haiku-20241022",
             temperature=0.7,
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
         )
