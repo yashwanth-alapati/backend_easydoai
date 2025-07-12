@@ -19,9 +19,11 @@ _database: Optional[Database] = None
 
 logger = logging.getLogger(__name__)
 
+
 # Task state constants
 class TaskState:
     """Task state constants for chat sessions"""
+
     PROCESSING = -1  # When AI is working in the background
     REQUIRE_PERMISSION = 0  # When AI finishes and outputs a message
     COMPLETE = 1  # When user clicks 'complete task' button

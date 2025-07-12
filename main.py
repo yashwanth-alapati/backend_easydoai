@@ -179,7 +179,9 @@ def list_tasks(email: str = Query(None)):
             {
                 "id": session["_id"],
                 "title": session["title"],
-                "status": map_state_to_status(session.get("state", TaskState.REQUIRE_PERMISSION)),
+                "status": map_state_to_status(
+                    session.get("state", TaskState.REQUIRE_PERMISSION)
+                ),
                 "state": session.get("state", TaskState.REQUIRE_PERMISSION),
                 "messages": [],
                 "user_id": session["user_id"],
@@ -275,7 +277,9 @@ async def create_task_with_message(
     return {
         "id": session_id,
         "title": session.get("title", "Chat Session"),
-        "status": map_state_to_status(session.get("state", TaskState.REQUIRE_PERMISSION)),
+        "status": map_state_to_status(
+            session.get("state", TaskState.REQUIRE_PERMISSION)
+        ),
         "state": session.get("state", TaskState.REQUIRE_PERMISSION),
         "messages": formatted_messages,
         "user_id": user["id"],
@@ -386,7 +390,7 @@ async def complete_task(task_id: str, req: Request):
 
     # Set session to complete state
     success = chat_service.set_session_complete(task_id)
-    
+
     if not success:
         raise HTTPException(status_code=500, detail="Failed to complete task")
 
