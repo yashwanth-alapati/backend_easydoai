@@ -46,8 +46,8 @@ def setup_logging():
                 record.levelname = f"{self.COLORS[record.levelname]}{record.levelname}{self.COLORS['RESET']}"
 
             # Truncate long messages
-            if len(record.getMessage()) > 200:
-                record.msg = record.getMessage()[:200] + "..."
+            if len(record.getMessage()) > 1000:
+                record.msg = record.getMessage()[:1000] + "..."
 
             return super().format(record)
 
