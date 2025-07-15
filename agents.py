@@ -19,6 +19,7 @@ import os
 # Add these imports for timezone correction
 from dateutil import parser
 import pytz
+from datetime import datetime
 
 
 # Improved logging configuration
@@ -213,6 +214,11 @@ class MultiAgentSupervisor:
         )
         logger.info("✅ Claude model loaded")
 
+        # Get current date for agent context
+        self.current_date = datetime.now().strftime("%Y-%m-%d")
+        self.current_year = datetime.now().year
+        logger.info(f"🗓️ Current date context: {self.current_date}")
+
         # Create specialized agents
         self.retriever_agent = self._create_retriever_agent()
         self.executor_agent = self._create_executor_agent()
@@ -235,7 +241,12 @@ class MultiAgentSupervisor:
             model=self.llm,
             tools=all_tools,
             prompt=(
-                "You are a retriever agent specialized in information gathering and research.\n\n"
+                f"You are a retriever agent specialized in information gathering and research.\n\n"
+                f"CURRENT DATE CONTEXT:\n"
+                f"- Today's date: {self.current_date}\n"
+                f"- Current year: {self.current_year}\n"
+                f"- When searching for recent events, news, or information, use {self.current_year} as the reference year\n"
+                f"- For queries about 'latest' or 'recent' events, search for {self.current_year} information\n\n"
                 "INSTRUCTIONS:\n"
                 "1. Decide which tool to use based on the user's request\n"
                 "2. Look at the description of the tool and see if you have all details required\n"
@@ -247,6 +258,8 @@ class MultiAgentSupervisor:
                 "- Use your available tools for information gathering and research tasks\n"
                 "- Use report_to_supervisor when you need more information or when the task "
                 "requires actions beyond research (like sending emails or creating events)\n\n"
+                "IMPORTANT: Always use the current year context when constructing search queries. "
+                f"For example, if someone asks about 'latest news' or 'recent events', include '{self.current_year}' in your search.\n\n"
                 "Be thorough but concise in your findings when you can complete the task."
             ),
             name="retriever_agent",
@@ -268,7 +281,10 @@ class MultiAgentSupervisor:
 
         # Create a generic prompt for the executor agent
         executor_prompt = (
-            "You are an executor agent specialized in performing actions and executing tasks.\n\n"
+            f"You are an executor agent specialized in performing actions and executing tasks.\n\n"
+            f"CURRENT DATE CONTEXT:\n"
+            f"- Today's date: {self.current_date}\n"
+            f"- Current year: {self.current_year}\n\n"
             "INSTRUCTIONS:\n"
             "1. Decide which tool to use based on the user's request\n"
             "2. Look at the description of the tool and see if you have all details required\n"
@@ -309,9 +325,13 @@ class MultiAgentSupervisor:
             model=self.llm,
             tools=[assign_to_retriever, assign_to_executor],
             prompt=(
-                "You are a supervisor managing two specialized agents:\n"
-                "- RETRIEVER AGENT: Can only perform web searches and information gathering\n"
-                "- EXECUTOR AGENT: Can only perform actions like sending emails and creating calendar events\n\n"
+                f"You are a supervisor managing two specialized agents:\n"
+                f"- RETRIEVER AGENT: Can only perform web searches and information gathering\n"
+                f"- EXECUTOR AGENT: Can only perform actions like sending emails and creating calendar events\n\n"
+                f"CURRENT DATE CONTEXT:\n"
+                f"- Today's date: {self.current_date}\n"
+                f"- Current year: {self.current_year}\n"
+                f"- When delegating tasks involving recent events or latest information, ensure agents use {self.current_year} context\n\n"
                 "WORKFLOW COORDINATION RULES:\n\n"
                 "1. FOR PURE RESEARCH TASKS:\n"
                 "   - Send directly to retriever agent\n"
@@ -348,7 +368,8 @@ class MultiAgentSupervisor:
                 "- ALWAYS provide full context (including research results) to executor\n"
                 "- Break down complex tasks into research phase → action phase\n"
                 "- If an agent reports inability without completing their core task, guide them to complete it first\n"
-                "- Provide comprehensive summaries to users based on all agent results"
+                "- Provide comprehensive summaries to users based on all agent results\n"
+                f"- When delegating tasks about recent events, remind agents to use {self.current_year} in their searches"
             ),
             name="supervisor",
         )

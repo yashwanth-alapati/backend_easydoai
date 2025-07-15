@@ -5,6 +5,7 @@ langchain
 langgraph
 langchain-anthropic
 langchain-community==0.3.24
+langchain-tavily
 python-dotenv==1.1.0
 sqlalchemy 
 psycopg2-binary 
@@ -26,6 +27,7 @@ google-auth
 google-auth-oauthlib
 google-auth-httplib2
 google-api-python-client
+tavily-python
 
 # Development and CI Tools
 httpx==0.27.0
