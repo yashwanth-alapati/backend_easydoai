@@ -245,7 +245,8 @@ class MultiAgentSupervisor:
                 f"CURRENT DATE CONTEXT:\n"
                 f"- Today's date: {self.current_date}\n"
                 f"- Current year: {self.current_year}\n"
-                f"- When searching for recent events, news, or information, use {self.current_year} as the reference year\n"
+                f"- When searching for recent events, news, or information, "
+                f"use {self.current_year} as the reference year\n"
                 f"- For queries about 'latest' or 'recent' events, search for {self.current_year} information\n\n"
                 "INSTRUCTIONS:\n"
                 "1. Decide which tool to use based on the user's request\n"
@@ -259,7 +260,8 @@ class MultiAgentSupervisor:
                 "- Use report_to_supervisor when you need more information or when the task "
                 "requires actions beyond research (like sending emails or creating events)\n\n"
                 "IMPORTANT: Always use the current year context when constructing search queries. "
-                f"For example, if someone asks about 'latest news' or 'recent events', include '{self.current_year}' in your search.\n\n"
+                f"For example, if someone asks about 'latest news' or 'recent events', "
+                f"include '{self.current_year}' in your search.\n\n"
                 "Be thorough but concise in your findings when you can complete the task."
             ),
             name="retriever_agent",
@@ -331,7 +333,8 @@ class MultiAgentSupervisor:
                 f"CURRENT DATE CONTEXT:\n"
                 f"- Today's date: {self.current_date}\n"
                 f"- Current year: {self.current_year}\n"
-                f"- When delegating tasks involving recent events or latest information, ensure agents use {self.current_year} context\n\n"
+                f"- When delegating tasks involving recent events or latest information, "
+                f"ensure agents use {self.current_year} context\n\n"
                 "WORKFLOW COORDINATION RULES:\n\n"
                 "1. FOR PURE RESEARCH TASKS:\n"
                 "   - Send directly to retriever agent\n"
@@ -369,7 +372,8 @@ class MultiAgentSupervisor:
                 "- Break down complex tasks into research phase → action phase\n"
                 "- If an agent reports inability without completing their core task, guide them to complete it first\n"
                 "- Provide comprehensive summaries to users based on all agent results\n"
-                f"- When delegating tasks about recent events, remind agents to use {self.current_year} in their searches"
+                f"- When delegating tasks about recent events, "
+                f"remind agents to use {self.current_year} in their searches"
             ),
             name="supervisor",
         )
