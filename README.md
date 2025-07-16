@@ -1,757 +1,457 @@
+# Tachyfy Backend - AI-Powered Task Management Platform
+
 [![Coverage Status](https://coveralls.io/repos/github/yashwanth-alapati/backend_tachyfy/badge.svg)](https://coveralls.io/github/yashwanth-alapati/backend_tachyfy)
 
-# Tachyfy - AI-Powered Task Management Platform
+## 🌟 High-Level Overview
 
-A comprehensive AI-powered task management platform that integrates multiple services (Gmail, Google Calendar, Web Search) through a sophisticated multi-agent system. Built with React frontend, FastAPI backend, and AWS cloud infrastructure.
+**Tachyfy** is a sophisticated AI-powered task management platform that leverages a **multi-agent architecture** to intelligently coordinate complex workflows involving email management, calendar scheduling, and real-time information retrieval. Built with modern cloud-native principles, the system uses **FastAPI** as the core backend framework, **Anthropic's Claude 3.5 Haiku** for AI reasoning, and **AWS serverless infrastructure** for scalable tool execution.
 
-## 🚀 Live Deployment
+### Core Value Proposition
 
-The application is deployed on AWS Elastic Beanstalk and accessible at:
-- **Production URL**: `https://your-app-name.eba-kzi5p2rc.region.elasticbeanstalk.com`
-- **API Documentation**: `https://your-app-name.eba-kzi5p2rc.region.elasticbeanstalk.com/docs`
+- **🤖 Multi-Agent Intelligence**: Specialized agents (Supervisor, Retriever, Executor) coordinate seamlessly to handle complex multi-step tasks
+- **🔗 Unified API Gateway**: Single interface for email, calendar operations through standardized MCP (Model Context Protocol) servers
+- **☁️ Cloud-Native Architecture**: AWS ECR containers + Serverless Lambda functions with automatic scaling and cost optimization for mcp server tools.
+- **🔐 Enterprise-Grade Security**: Google OAuth2 integration for gmail and calendar tool use.
+- **🚀 Real-Time Processing**: Asynchronous task execution with live status updates and conversation history
 
-## 📋 Table of Contents
 
-- [System Architecture](#system-architecture)
-- [Technology Stack](#technology-stack)
-- [Core Components](#core-components)
-- [Multi-Agent System](#multi-agent-system)
-- [API Architecture](#api-architecture)
-- [Security](#security)
-- [Setup & Installation](#setup--installation)
-- [Configuration](#configuration)
-- [Usage Examples](#usage-examples)
-- [Development](#development)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
+## 🏗️ System Architecture(TO-dO add diagram)
 
-## 🏗️ System Architecture
+### Multi-Agent Coordination Flow(To-do add agent diagram)
 
-### High-Level Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                                TACHYFY ECOSYSTEM                                │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  Frontend (React)          Backend (FastAPI)           Cloud Services (AWS)     │
-│  ┌─────────────────┐      ┌─────────────────┐        ┌─────────────────┐       │
-│  │  React App      │◄────►│  API Gateway    │        │  Lambda Functions│       │
-│  │  - TypeScript   │      │  - FastAPI      │        │  - Gmail MCP     │       │
-│  │  - React Router │      │  - Multi-Agent  │        │  - Calendar MCP  │       │
-│  │  - Context API  │      │  - Tool System  │        │  - Containerized │       │
-│  └─────────────────┘      └─────────────────┘        └─────────────────┘       │
-│                                     │                                            │
-│  ┌─────────────────┐      ┌─────────────────┐        ┌─────────────────┐       │
-│  │  Storage        │      │  AI System      │        │  Data Layer     │       │
-│  │  - LocalStorage │      │  - Claude Model │        │  - DynamoDB     │       │
-│  │                 │      │  - LangChain    │        │  - MongoDB      │       │
-│  │                 │      │  - LangGraph    │        │  - PostgreSQL   │       │
-│  └─────────────────┘      └─────────────────┘        └─────────────────┘       │
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Architecture Principles
-
-- **Microservices**: Loosely coupled services with clear boundaries
-- **Event-Driven**: Asynchronous communication patterns
-- **Cloud-Native**: Designed for AWS cloud infrastructure
-- **Security-First**: Built-in security at every layer
-- **Scalable**: Horizontal scaling capabilities
 
 ## 🛠 Technology Stack
 
-### Frontend
-- **Framework**: React 19.1.0 with TypeScript
-- **Routing**: React Router DOM 7.6.2
-- **State Management**: React Context API
-- **Build Tool**: React Scripts 5.0.1
-- **Styling**: CSS with responsive design
-
-### Backend
-- **Framework**: FastAPI with Python 3.11+
-- **AI/ML**: LangChain, LangGraph, Anthropic Claude 3.5 Haiku
-- **Database**: PostgreSQL with SQLAlchemy ORM, MongoDB for chat history
-- **Authentication**: Passlib with bcrypt, OAuth2
-- **API Documentation**: Automatic OpenAPI/Swagger generation
-
-### Cloud Infrastructure
-- **Hosting**: AWS Elastic Beanstalk
-- **Functions**: AWS Lambda (containerized)
-- **Storage**: DynamoDB for tokens, MongoDB for chat history
-- **Container Registry**: Amazon ECR
-- **Security**: IAM roles and policies
-
-### Key Dependencies
-
-```python
-# Backend (requirements.txt)
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-langchain>=0.1.0
-langgraph>=0.1.0
-langchain-anthropic>=0.1.0
-anthropic>=0.8.0
-sqlalchemy>=2.0.0
-psycopg2-binary>=2.9.0
-pymongo>=4.13.2
-boto3>=1.34.0
-python-jose[cryptography]>=3.3.0
-passlib[bcrypt]>=1.7.4
+### Core Backend Framework
+```yaml
+Framework: FastAPI 0.104.0+
+Runtime: Python 3.11+
+Server: Uvicorn with async support
+Middleware: CORS, Authentication, Rate Limiting
+LLM Provider: Anthropic Claude 3.5 Haiku
+Framework: LangChain 0.1.0+ with LangGraph
+Agent Architecture: Multi-agent supervisor pattern
+Tool Integration: Dynamic tool loading system
+Context Management: Conversation history + user context
+Chat Storage: MongoDB 6+ (Conversation history, sessions)
+Token Storage: DynamoDB (OAuth tokens with TTL)
+Primary Hosting: AWS Elastic Beanstalk
+Serverless Compute: AWS Lambda (Containerized for mcp tools)
+Container Registry: Amazon ECR(for mcp tools)
+Infrastructure as Code: AWS CDK (TypeScript)
+Monitoring: CloudWatch + X-Ray tracing
+Authentication: JWT tokens with refresh mechanism
+OAuth2 Provider: Google (Gmail + Calendar scopes)
+Token Management: Automatic refresh, secure storage
 ```
 
-```json
-// Frontend (package.json)
+---
+
+## 🤖 Multi-Agent System Deep Dive
+
+### Agent Responsibilities Matrix
+
+| Agent | Primary Role | Tools Available | Communication Pattern |
+|-------|-------------|-----------------|----------------------|
+| **Supervisor** | Orchestration & Coordination | `transfer_to_retriever`, `transfer_to_executor` | Delegates tasks, synthesizes results |
+| **Retriever** | Information Gathering | `web_search`, `report_to_supervisor` | Researches, extracts, reports back |
+| **Executor** | Action Execution | `gmail_send_email`, `google_calendar_mcp`, `report_to_supervisor` | Executes, confirms, reports status |
+
+### Workflow Coordination Patterns
+
+#### 1. Pure Research Tasks
+```
+User Request → Supervisor → Retriever Agent → Web Search → Results → User
+```
+
+#### 2. Pure Action Tasks (with complete context)
+```
+User Request → Supervisor → Executor Agent → Service API → Confirmation → User
+```
+
+#### 3. Complex Multi-Step Tasks (research +execution)
+```
+User Request → Supervisor → Retriever Agent → Research Results → 
+             ↓
+Supervisor → Executor Agent → Action Execution → Confirmation → User
+```
+
+### Agent Prompt Engineering
+
+Each agent has specialized prompts optimized for their role:
+
+- **Supervisor**: Decision-making, task decomposition, result synthesis
+- **Retriever**: Search optimization, information extraction, context building
+- **Executor**: Action validation, error handling, confirmation reporting
+
+---
+
+## 🔧 Core Components
+
+### 1. Tool System Architecture(Hardcoded to use all tools for now since we have limited number anyways)
+
+```python
+# Dynamic Tool Loading System
+class ToolLoader:
+    def __init__(self):
+        self.available_tools = self._discover_tools()
+    
+    def _discover_tools(self) -> List[Tool]:
+        """Dynamically loads tools from available_tools/ directory"""
+        tools = []
+        for module in os.listdir("available_tools"):
+            if module.endswith(".py"):
+                tool_module = importlib.import_module(f"available_tools.{module[:-3]}")
+                if hasattr(tool_module, "get_tool"):
+                    tools.append(tool_module.get_tool())
+        return tools
+```
+
+### 2. Available Tools
+
+#### Web Search Tool (`websearch.py`)
+- **Provider**: Tavily API
+- **Capabilities**: Real-time search + content extraction
+- **Features**: Intelligent query optimization, multi-source aggregation
+
+#### Gmail MCP Tool (`gmail_mcp.py`)
+- **Integration**: Google Gmail API via Lambda
+- **Operations**: Send, read, search, manage emails
+- **Security**: OAuth2 with automatic token refresh
+
+#### Google Calendar Tool (`google_calendar.py`)
+- **Integration**: Google Calendar API via Lambda
+- **Operations**: Create, update, list, delete events
+- **Features**: Multi-calendar support, attendee management
+
+### 3. Authentication & Authorization System
+
+```python
+# Multi-Layer Security Architecture
+class AuthenticationSystem:
+    def __init__(self):
+        self.jwt_handler = JWTHandler()
+        self.oauth_manager = OAuth2Manager()
+        self.token_store = DynamoDBTokenStore()
+    
+    async def authenticate_user(self, email: str, password: str) -> AuthResult:
+        """Primary authentication with JWT generation"""
+        
+    async def refresh_oauth_token(self, user_id: str, service: str) -> TokenResult:
+        """Automatic OAuth token refresh for external services"""
+        
+    async def validate_permissions(self, user_id: str, tool_name: str) -> bool:
+        """Tool-level permission validation"""
+```
+
+### 4. Database Models & Schema
+
+#### MongoDB Collections
+```javascript
+// Chat sessions and conversation history
 {
-  "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router-dom": "^7.6.2",
-    "typescript": "^4.9.5"
+  _id: ObjectId,
+  session_id: String,
+  user_id: Number,
+  messages: [{
+    role: String, // "user" | "assistant" | "system"
+    message: String,
+    timestamp: Date,
+    metadata: Object
+  }],
+  status: String, // "active" | "complete" | "processing"
+  created_at: Date,
+  updated_at: Date
+}
+```
+
+#### DynamoDB Schema
+```json
+{
+  "TableName": "easydoai-user-tokens",
+  "KeySchema": [
+    {"AttributeName": "user_id", "KeyType": "HASH"},
+    {"AttributeName": "service", "KeyType": "RANGE"}
+  ],
+  "AttributeDefinitions": [
+    {"AttributeName": "user_id", "AttributeType": "S"},
+    {"AttributeName": "service", "AttributeType": "S"}
+  ],
+  "TimeToLiveSpecification": {
+    "AttributeName": "ttl",
+    "Enabled": true
   }
 }
 ```
 
-## 🤖 Multi-Agent System
+---
 
-### Agent Architecture
+## 🔗 API Documentation
 
+### Authentication Endpoints
+
+| Method | Endpoint | Description | Request Body | Response |
+|--------|----------|-------------|--------------|----------|
+| POST | `/signup` | User registration | `{"email": "user@example.com", "password": "secure123"}` | `{"message": "Signup successful"}` |
+| POST | `/login` | User authentication | `{"email": "user@example.com", "password": "secure123"}` | `{"message": "Login successful", "token": "jwt_token"}` |
+| POST | `/auth/refresh` | Token refresh | `{"refresh_token": "refresh_jwt"}` | `{"access_token": "new_jwt"}` |
+| POST | `/logout` | User logout | `{}` | `{"message": "Logout successful"}` |
+
+### Task Management Endpoints
+
+| Method | Endpoint | Description | Parameters | Response Schema |
+|--------|----------|-------------|------------|-----------------|
+| GET | `/tasks` | List user tasks | `?email=user@example.com` | `{"tasks": [TaskObject]}` |
+| POST | `/tasks` | Create new task | `{"message": "task description", "email": "user@example.com", "selected_tools": ["gmail_mcp"]}` | `TaskObject` |
+| GET | `/tasks/{task_id}/messages` | Get conversation history | - | `{"messages": [MessageObject]}` |
+| POST | `/tasks/{task_id}/messages` | Add message to conversation | `{"message": "new message", "email": "user@example.com"}` | `MessageObject` |
+
+### Integration Endpoints
+
+#### Gmail Integration
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| GET | `/auth/google/authorize/gmail` | Initiate Gmail OAuth | Query param: `user_id` |
+| GET | `/auth/google/callback` | OAuth callback handler | Auto-handled |
+| GET | `/gmail/status` | Check Gmail connection | JWT token required |
+| GET | `/gmail/tools` | List available Gmail tools | JWT token required |
+
+#### Calendar Integration
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| GET | `/auth/google/authorize/calendar` | Initiate Calendar OAuth | Query param: `user_id` |
+| GET | `/calendar/tools` | List available Calendar tools | JWT token required |
+| POST | `/calendar/execute` | Execute calendar operation | JWT token + request body |
+
+### System Endpoints
+
+| Method | Endpoint | Description | Purpose |
+|--------|----------|-------------|---------|
+| GET | `/health` | Health check | System monitoring |
+| GET | `/db-test` | Database connectivity test | Infrastructure validation |
+| GET | `/available-tools` | List all available tools | Tool discovery |
+| POST | `/chat` | Direct chat with AI system | `{"message": "query", "email": "user@example.com"}` |
+
+---
+
+## ⚙️ Configuration & Setup
+
+### Environment Variables
+
+#### Core Application Settings
+```bash
+# Database Connections
+DATABASE_URL=postgresql://user:password@localhost:5432/tachyfy
+MONGODB_URL=mongodb://localhost:27017/tachyfy_chat
+
+# AI Service Configuration
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+TAVILY_API_KEY=your_tavily_search_api_key
+
+# JWT Security
+JWT_SECRET_KEY=your_super_secure_jwt_secret_key
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# Google OAuth2 Configuration
+EASYDOAI_GOOGLE_CLIENT_ID=your_google_oauth_client_id
+EASYDOAI_GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
+EASYDOAI_GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback # for production use that url
+
+# AWS Configuration
+AWS_REGION=us-east-1
+TOKENS_TABLE_NAME=your-table-name
+GMAIL_LAMBDA_FUNCTION_NAME=your-gmail-lambda
+CALENDAR_LAMBDA_FUNCTION_NAME=your-calendar-lambda
+
+# CORS and Security
+ALLOWED_ORIGINS=Your-allowed-origins
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                          MULTI-AGENT SUPERVISOR                    │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐  │
-│  │   SUPERVISOR    │    │    RETRIEVER    │    │    EXECUTOR     │  │
-│  │     AGENT       │    │     AGENT       │    │     AGENT       │  │
-│  │                 │    │                 │    │                 │  │
-│  │ • Coordinates   │    │ • Web Search    │    │ • Gmail Actions │  │
-│  │ • Delegates     │    │ • Research      │    │ • Calendar Mgmt │  │
-│  │ • Orchestrates  │    │ • Info Gather   │    │ • Task Exec     │  │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘  │
-│           │                       │                       │         │
-│           └───────────────────────┼───────────────────────┘         │
-│                                   │                                 │
-│  ┌─────────────────────────────────┼─────────────────────────────────┐  │
-│  │                    TOOL SYSTEM                                  │  │
-│  │                                                                 │  │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │  │
-│  │  │ Web Search  │  │ Gmail MCP   │  │ Calendar    │             │  │
-│  │  │ - Tavily    │  │ - Lambda    │  │ - Lambda    │             │  │
-│  │  │ - Real-time │  │ - OAuth2    │  │ - OAuth2    │             │  │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘             │  │
-│  └─────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Agent Responsibilities
-
-#### Supervisor Agent
-- **Workflow Coordination**: Orchestrates complex multi-step tasks
-- **Task Delegation**: Routes tasks to appropriate specialized agents
-- **Result Synthesis**: Combines results from multiple agents
-- **Error Handling**: Manages failures and retries across agents
-
-#### Retriever Agent
-- **Information Gathering**: Web search and research capabilities
-- **Data Processing**: Formats and structures retrieved information
-- **Context Building**: Provides relevant context for task execution
-- **Real-time Updates**: Fetches current information from external sources
-
-#### Executor Agent
-- **Action Execution**: Performs concrete actions (emails, calendar events)
-- **Service Integration**: Interfaces with external APIs and services
-- **Transaction Management**: Ensures atomic operations across services
-- **Result Reporting**: Provides detailed execution feedback
-
-### Workflow Coordination Rules
-
-1. **Pure Research Tasks**: Direct routing to Retriever Agent
-2. **Pure Action Tasks**: Direct routing to Executor Agent (with full context)
-3. **Combined Tasks**: Sequential processing (Research → Action)
-4. **Error Recovery**: Intelligent retry mechanisms with context preservation
-
-## 🔧 Core Components
-
-### Authentication System
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      AUTHENTICATION FLOW                           │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  Frontend (React)         Backend (FastAPI)         External APIs   │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐  │
-│  │  AuthContext    │    │  Auth Endpoints │    │  Google OAuth2  │  │
-│  │  - Login/Logout │◄──►│  - JWT Tokens   │◄──►│  - Gmail API    │  │
-│  │  - LocalStorage │    │  - User Service │    │  - Calendar API │  │
-│  │  - Route Guards │    │  - OAuth Flow   │    │  - Token Refresh│  │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘  │
-│                                   │                                 │
-│  ┌─────────────────────────────────┼─────────────────────────────────┐  │
-│  │                    TOKEN STORAGE                                │  │
-│  │                                                                 │  │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │  │
-│  │  │ DynamoDB    │  │ JWT Tokens  │  │ Refresh     │             │  │
-│  │  │ - OAuth     │  │ - Session   │  │ - Auto      │             │  │
-│  │  │ - TTL       │  │ - Secure    │  │ - Rotation  │             │  │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘             │  │
-│  └─────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Data Layer
-
-**Multi-Database Strategy:**
-- **PostgreSQL**: Primary database for user accounts, task metadata
-- **MongoDB**: Chat history, conversation state, session management
-- **DynamoDB**: OAuth tokens, temporary data with TTL
-- **LocalStorage**: Frontend session persistence
-
-```python
-# Database Models
-class User(SQLAlchemyBase):
-    id = Column(Integer, primary_key=True)
-    email = Column(String, unique=True, nullable=False)
-    password_hash = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-class ChatMessage(Document):
-    session_id = StringField(required=True)
-    user_id = IntField(required=True)
-    message = StringField(required=True)
-    response = StringField()
-    timestamp = DateTimeField(default=datetime.utcnow)
-```
-
-### Tool Integration System
-
-```python
-def get_tools(selected_tools: Optional[List[str]] = None) -> List[Tool]:
-    """
-    Dynamically load tools from the available_tools directory.
-    Each tool module defines a get_tool() function that returns a Tool instance.
-    """
-    all_tools = []
-    
-    # Load all available tools
-    for filename in os.listdir(AVAILABLE_TOOLS_DIR):
-        if filename.endswith(".py") and not filename.startswith("__"):
-            module_name = f"{AVAILABLE_TOOLS_DIR}.{filename[:-3]}"
-            try:
-                module = importlib.import_module(module_name)
-                if hasattr(module, "get_tool"):
-                    tool = module.get_tool()
-                    all_tools.append(tool)
-            except Exception as e:
-                print(f"Error loading tool {module_name}: {e}")
-    
-    return all_tools
-```
-
-## 🔗 API Architecture
-
-### RESTful API Design
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                          API ENDPOINTS                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  Authentication        Chat/Tasks             Integrations          │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐  │
-│  │ POST /auth/     │    │ POST /chat/     │    │ GET /gmail/     │  │
-│  │ - login         │    │ - send-message  │    │ - authorize     │  │
-│  │ - signup        │    │ - get-history   │    │ - messages      │  │
-│  │ - refresh       │    │ - create-task   │    │ - send          │  │
-│  │ - logout        │    │ - list-tasks    │    │ - status        │  │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘  │
-│                                                                     │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐  │
-│  │ OAuth Flow      │    │ WebSocket       │    │ Calendar API    │  │
-│  │ - /google/auth  │    │ - Real-time     │    │ - /calendar/    │  │
-│  │ - /callback     │    │ - Live Updates  │    │ - authorize     │  │
-│  │ - /refresh      │    │ - Notifications │    │ - events        │  │
-│  └─────────────────┘    └─────────────────┘    └─────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### API Endpoints
-
-#### Authentication
-
-| Method | Endpoint | Description | Request Body |
-|--------|----------|-------------|--------------|
-| POST | `/signup` | Register new user | `{"email": "user@example.com", "password": "password"}` |
-| POST | `/login` | User login | `{"email": "user@example.com", "password": "password"}` |
-
-#### Tasks
-
-| Method | Endpoint | Description | Parameters |
-|--------|----------|-------------|------------|
-| GET | `/tasks` | List user tasks | `?email=user@example.com` |
-| POST | `/tasks` | Create new task | `{"message": "task description", "email": "user@example.com"}` |
-| GET | `/tasks/{task_id}/messages` | Get task messages | - |
-| POST | `/tasks/{task_id}/messages` | Add message to task | `{"message": "new message"}` |
-
-#### Chat
-
-| Method | Endpoint | Description | Request Body |
-|--------|----------|-------------|--------------|
-| POST | `/chat` | Chat with AI agent | `{"message": "your message", "email": "user@example.com"}` |
-
-#### Health Check
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/db-test` | Database connection test |
-
-## 🔐 Security
-
-### Security Features
-
-- **Authentication**: JWT tokens with refresh mechanism
-- **Authorization**: Role-based access control (RBAC)
-- **OAuth2 Integration**: Secure third-party service access
-- **Data Encryption**: At rest and in transit
-- **Rate Limiting**: API endpoint protection
-- **Input Validation**: Comprehensive request validation
-- **CORS Configuration**: Cross-origin request security
-- **Security Headers**: Comprehensive security headers
-
-## 🚀 Setup & Installation
-
-### Prerequisites
-
-- **Python 3.11+**
-- **Node.js 18+**
-- **PostgreSQL 13+**
-- **MongoDB 6+**
-- **AWS CLI configured**
-- **Docker & Docker Compose**
 
 ### Local Development Setup
 
-#### 1. Clone Repository
+#### 1. Prerequisites Installation
 ```bash
-git clone https://github.com/yashwanth-alapati/tachyfy.git
-cd tachyfy
+# Install Python 3.11+
+brew install python@3.11  # macOS
+sudo apt install python3.11 python3.11-venv  # Ubuntu
+
+# Install MongoDB
+brew install mongodb-community  # macOS
+sudo apt install mongodb  # Ubuntu
+
+# Install AWS CLI
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awsclip.zip"
+unzip awsclip.zip && sudo ./aws/install
 ```
 
-#### 2. Backend Setup
+#### 2. Project Setup
 ```bash
-cd tachyfy_backend
+# Clone and navigate
+git clone https://github.com/yashwanth-alapati/tachyfy.git
+cd tachyfy/tachyfy_backend
 
 # Create virtual environment
-python -m venv env
-source env/bin/activate  # On Windows: env\Scripts\activate
+python3.11 -m venv env
+source env/bin/activate  # Linux/macOS
+# env\Scripts\activate  # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your configuration
-
-# Initialize database
-alembic upgrade head
-
-# Run backend
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# Set up pre-commit hooks
+pre-commit install
 ```
 
-#### 3. Frontend Setup
+#### 3. Database Initialization
 ```bash
-cd tachyfy_frontend
 
-# Install dependencies
-npm install
+# MongoDB setup (auto-creates collections)
+mongod --dbpath /usr/local/var/mongodb
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your configuration
-
-# Run frontend
-npm start
 ```
 
-#### 4. Docker Setup (Alternative)
+#### 4. AWS Services Setup
 ```bash
-# Run full stack with Docker Compose
-docker-compose up -d
+# Configure AWS credentials
+aws configure
 
-# View logs
-docker-compose logs -f
-```
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-#### Backend (.env)
-```bash
-# Database
-DATABASE_URL=postgresql://user:password@localhost/tachyfy
-MONGODB_URL=mongodb://localhost:27017/tachyfy_chat
-
-# AI Services
-ANTHROPIC_API_KEY=your_anthropic_api_key
-TAVILY_API_KEY=your_tavily_api_key
-
-# Google OAuth
-EASYDOAI_GOOGLE_CLIENT_ID=your_google_client_id
-EASYDOAI_GOOGLE_CLIENT_SECRET=your_google_client_secret
-EASYDOAI_GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
-
-# AWS
-AWS_REGION=us-east-1
-TOKENS_TABLE_NAME=easydoai-user-tokens
-
-# Security
-JWT_SECRET_KEY=your_jwt_secret_key
-JWT_ALGORITHM=HS256
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# CORS
-ALLOWED_ORIGINS=https://your-frontend-domain.com,http://localhost:3000
-```
-
-#### Frontend (.env)
-```bash
-REACT_APP_API_URL=http://localhost:8000
-REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
-```
-
-### AWS Elastic Beanstalk Configuration
-
-For production deployment, set these environment variables in EB:
-
-```bash
-eb setenv DATABASE_URL="postgresql://..." \
-         ANTHROPIC_API_KEY="..." \
-         TAVILY_API_KEY="..." \
-         ALLOWED_ORIGINS="https://your-frontend.com"
-```
-
-## 💡 Usage Examples
-
-### 1. User Registration
-
-```bash
-curl -X POST "http://localhost:8000/signup" \
-  -H "Content-Type: application/json" \
-  -d '{"email": "john@example.com", "password": "securepassword123"}'
-```
-
-**Response:**
-```json
-{"message": "Signup successful"}
-```
-
-### 2. User Login
-
-```bash
-curl -X POST "http://localhost:8000/login" \
-  -H "Content-Type: application/json" \
-  -d '{"email": "john@example.com", "password": "securepassword123"}'
-```
-
-**Response:**
-```json
-{"message": "Login successful"}
-```
-
-### 3. Create a Task
-
-```bash
-curl -X POST "http://localhost:8000/tasks" \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Schedule a meeting with the team", "email": "john@example.com"}'
-```
-
-**Response:**
-```json
-{
-  "id": 1,
-  "title": "Schedule a meeting with the",
-  "status": "complete",
-  "messages": [
-    {"role": "user", "message": "Schedule a meeting with the team"},
-    {"role": "assistant", "message": "I'll help you schedule a meeting..."}
-  ],
-  "user_id": 1,
-  "created_at": "2024-01-15T10:30:00"
-}
-```
-
-### 4. Chat with AI Agent
-
-```bash
-curl -X POST "http://localhost:8000/chat" \
-  -H "Content-Type: application/json" \
-  -d '{"message": "What are my upcoming meetings?", "email": "john@example.com"}'
-```
-
-**Response:**
-```json
-{
-  "reply": "Let me check your calendar for upcoming meetings..."
-}
-```
-
-### 5. Gmail Integration
-
-```bash
-# Initiate Gmail OAuth
-curl -X GET "http://localhost:8000/auth/google/authorize/gmail?user_id=123"
-
-# Send Email
-curl -X POST "http://localhost:8000/gmail/send" \
-  -H "Authorization: Bearer your_jwt_token" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "to": "recipient@example.com",
-    "subject": "Meeting Reminder",
-    "body": "Don'\''t forget about our meeting tomorrow at 2 PM"
-  }'
-```
-
-## 🧪 Development
-
-### Project Structure
-
-```
-tachyfy/
-├── tachyfy_backend/
-│   ├── agents.py                  # Multi-agent system
-│   ├── main.py                    # FastAPI application
-│   ├── auth_endpoints.py          # Authentication routes
-│   ├── chat_service.py            # Chat management
-│   ├── mongodb_config.py          # MongoDB configuration
-│   ├── available_tools/
-│   │   ├── gmail_mcp.py          # Gmail integration
-│   │   ├── google_calendar.py    # Calendar integration
-│   │   └── websearch.py          # Web search tool
-│   ├── services/
-│   │   ├── google_oauth.py       # OAuth service
-│   │   ├── gmail_lambda_service.py
-│   │   └── calendar_lambda_service.py
-│   ├── aws_services/
-│   │   └── dynamodb_config.py    # DynamoDB configuration
-│   ├── infrastructure/
-│   │   ├── app.py                # CDK app
-│   │   └── lambda_mcp_stack.py   # Lambda infrastructure
-│   └── lambda_mcp_servers/
-│       ├── gmail_lambda/
-│       └── calendar_lambda/
-├── tachyfy_frontend/
-│   ├── public/
-│   └── src/
-│       ├── App.tsx               # Main application
-│       ├── AuthContext.tsx       # Authentication context
-│       ├── Home.tsx              # Main interface
-│       ├── Login.tsx             # Login component
-│       ├── Signup.tsx            # Signup component
-│       └── components/
-│           └── GlobalNotifications.tsx
-└── README.md
-```
-
-### Development Guidelines
-
-#### Code Style
-- **Python**: Black formatter, Flake8 linter
-- **TypeScript**: ESLint with React rules
-- **Git**: Conventional commits
-- **Testing**: Pytest for backend, Jest for frontend
-
-#### Local Development Commands
-```bash
-# Start backend with hot reload
-uvicorn main:app --reload
-
-# Start frontend with hot reload
-npm start
-
-# Run database migrations
-alembic upgrade head
-
-# Create new migration
-alembic revision --autogenerate -m "description"
-```
-
-### Running Tests
-
-```bash
-# Backend tests
-pytest tests/ -v --cov=. --cov-report=html
-
-# Frontend tests
-npm test -- --coverage --watchAll=false
-
-# Run specific test file
-pytest tests/test_auth.py -v
-```
-
-### Code Quality
-
-```bash
-# Format code
-black .
-
-# Lint code
-flake8 --max-line-length=88 --ignore=E501,E203,W503 --exclude=env .
-
-# Run both (as in CI)
-black --check . && flake8 --max-line-length=88 --ignore=E501,E203,W503 --exclude=env .
-```
-
-### Adding New Tools
-
-1. Create tool file in `available_tools/`
-2. Implement tool function
-3. Register in `tools.py`
-4. Add to agent in `agents.py`
-
-Example tool structure:
-```python
-# available_tools/my_tool.py
-def my_tool_func(param: str) -> dict:
-    """Tool description"""
-    # Implementation
-    return {"result": "success"}
-```
-
-## 📦 Deployment
-
-### AWS Infrastructure
-
-#### 1. Lambda Functions Deployment
-```bash
-cd tachyfy_backend/lambda_mcp_servers
-
-# Deploy Gmail and Calendar Lambda functions
+# Deploy Lambda functions
+cd lambda_mcp_servers
 ./deploy.sh
+
 ```
 
-#### 2. Backend Deployment (Elastic Beanstalk)
+#### 5. Start Development Server
 ```bash
-# Initialize Elastic Beanstalk
-eb init -p python-3.11 tachyfy-backend
+# Run with hot reload
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-# Create environment
-eb create tachyfy-backend-prod
-
-# Deploy
-eb deploy
+# Verify API is running
+curl http://localhost:8000/health
 ```
 
-#### 3. Frontend Deployment
-```bash
-# Build for production
-npm run build
 
-# Deploy to S3 + CloudFront (example)
-aws s3 sync build/ s3://your-frontend-bucket/
-aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"
-```
+## 🧪 Testing & Quality Assurance
 
-### CI/CD Pipeline
+### Test Suite Architecture
 
-The application uses GitHub Actions for automated deployment:
 
-1. **Push to main branch** triggers GitHub Actions
-2. **Tests run** with coverage reporting
-3. **Code quality checks** (black, flake8)
-4. **Build and deploy** to Elastic Beanstalk
-5. **Database migrations** run automatically
 
-### Environment Variables in Production
-
-Set in Elastic Beanstalk environment:
-- `DATABASE_URL`: RDS connection string
-- `ANTHROPIC_API_KEY`: AI service key
-- `TAVILY_API_KEY`: Search API key
-- `ALLOWED_ORIGINS`: Frontend domain(s)
-
-## 🔄 Monitoring & Observability
-
-### Performance Monitoring
-
-- **Response Time Tracking**: API endpoint performance
-- **Database Query Monitoring**: Slow query detection
-- **Memory Usage**: Lambda function optimization
-- **Error Rate Monitoring**: Service health metrics
-
-### Logging Strategy
-
-The project maintains >80% test coverage with structured logging:
+### Code Quality Tools
 
 ```bash
-coverage run --source='.' -m pytest
-coverage report -m
-coverage html  # Generate HTML report
+# Format code with Black
+black . --line-length 88
+
+
+# Lint with Flake8
+flake8 . --max-line-length=88 --ignore=E203,W503 --exclude=env
+
+---
+
+## 🚀 Deployment & Infrastructure
+
+### AWS Infrastructure Overview
+
 ```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              PRODUCTION INFRASTRUCTURE                         │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  Internet Gateway          Application Load Balancer        Auto Scaling        │
+│  ┌─────────────────┐      ┌─────────────────┐             ┌─────────────────┐   │
+│  │ Route 53        │─────►│ ALB + WAF       │────────────►│ Elastic         │   │
+│  │ • DNS           │      │ • SSL/TLS       │             │ Beanstalk       │   │
+│  │ • Health Checks │      │ • Rate Limiting │             │ • Auto Scaling  │   │
+│  └─────────────────┘      └─────────────────┘             └─────────────────┘   │
+│                                     │                              │            │
+│  ┌─────────────────────────────────────────────────────────────────┼─────────┐  │
+│  │                         COMPUTE & SERVERLESS LAYER               │         │  │
+│  │                                                                   │         │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │  │
+│  │  │ Lambda      │  │ Lambda      │  │ ECR         │  │ CloudWatch  │       │  │
+│  │  │ Gmail MCP   │  │ Calendar    │  │ Container   │  │ Monitoring  │       │  │
+│  │  │ Function    │  │ MCP Function│  │ Registry    │  │ & Logging   │       │  │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘       │  │
+│  └─────────────────────────────────────────────────────────────────────────┘  │
+│                                     │                                          │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                         DATA & STORAGE LAYER                           │   │
+│  │                                                                         │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
+│  │  │ RDS         │  │ DocumentDB  │  │ DynamoDB    │  │ S3 Buckets  │     │   │
+│  │  │ PostgreSQL  │  │ MongoDB API │  │ Token Store │  │ Static      │     │   │
+│  │  │ Multi-AZ    │  │ Cluster     │  │ Global      │  │ Assets      │     │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘     │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+ 
+```
+
+
+
+
 
 ## 🤝 Contributing
 
 ### Development Workflow
 
-1. **Fork the repository**
-2. **Create feature branch**: `git checkout -b feature/amazing-feature`
-3. **Commit changes**: `git commit -m 'Add amazing feature'`
-4. **Push to branch**: `git push origin feature/amazing-feature`
-5. **Open Pull Request**
+1. **Fork & Clone**
+   ```bash
+   git clone https://github.com/your-username/tachyfy.git
+   cd tachyfy/tachyfy_backend
+   ```
 
-### Development Guidelines
+2. **Create Feature Branch**
+   ```bash
+   git checkout -b feature/agent-memory-optimization
+   ```
 
-- Follow PEP 8 style guide
-- Write tests for new features
-- Update documentation
-- Ensure CI/CD pipeline passes
+3. **Development Setup**
+   ```bash
+   python -m venv env
+   source env/bin/activate
+   pip install -r requirements.txt
+   pip install -r requirements-dev.txt
+   pre-commit install
+   ```
 
-## 📄 License
+4. **Code & Test**
+   ```bash
+   # Write code following style guide
+   # Add comprehensive tests
+   pytest tests/ -v --cov=.
+   ```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+5. **Quality Checks**
+   ```bash
+   black .
+   flake8 .
+   ```
 
-## 🔗 Related Projects
+6. **Commit & Push**
+   ```bash
+   git add .
+   git commit -m "feat: optimize agent memory usage for large conversations"
+   git push origin feature/agent-memory-optimization
+   ```
 
-- **Frontend**: [Tachyfy Frontend Repository](https://github.com/yashwanth-alapati/tachyfy_frontend)
-- **Gmail MCP Server**: [Gmail MCP Integration](https://github.com/yashwanth-alapati/gmail-mcp-server)
-- **Google Calendar MCP**: [Calendar Integration](https://github.com/yashwanth-alapati/google-calendar-mcp)
+7. **Create Pull Request**
+   - Comprehensive description
+   - Link related issues
+   - Include test results
+   - Request review from maintainers
 
-## 📞 Support
+### Contribution Guidelines
 
-For support and questions:
-- **Issues**: [GitHub Issues](https://github.com/yashwanth-alapati/tachyfy/issues)
-- **Email**: [ya2351@nyu.edu](mailto:ya2351@nyu.edu)
-- **Documentation**: Available in the `/docs` directory
+- **Code Review**: All changes require review from 2+ maintainers
+- **Testing**: Minimum x% test coverage for new code
+- **Documentation**: Update relevant documentation
 
-## 🙏 Acknowledgments
 
-- **Anthropic**: For the Claude AI model
-- **LangChain**: For the agent framework
-- **FastAPI**: For the excellent web framework
-- **React**: For the frontend framework
-- **AWS**: For cloud infrastructure
-- **Open Source Community**: For the amazing tools and libraries
+**Built with ❤️ using FastAPI, Claude AI, and AWS - Deployed on Elastic Beanstalk**
 
----
-
-**Built with ❤️ using FastAPI, React, and AWS - Deployed on Elastic Beanstalk**
-```
-
-I've updated the README.md with a comprehensive architecture overview that covers:
-
-1. **Complete System Architecture** - Both frontend and backend with visual diagrams
-2. **Multi-Agent System Details** - Detailed explanation of the supervisor, retriever, and executor agents
-3. **Technology Stack** - Comprehensive coverage of all technologies used
-4. **Security Architecture** - Complete security implementation details
-5. **API Documentation** - Full REST API reference
-6. **Setup Instructions** - Step-by-step setup for both frontend and backend
-7. **Development Guidelines** - Code style, testing, and contribution guidelines
-8. **Deployment Strategy** - AWS infrastructure and CI/CD pipeline
-9. **Monitoring & Observability** - Performance tracking and logging
-10. **Project Structure** - Complete file organization
-
-The README now serves as a comprehensive guide for anyone wanting to understand, contribute to, or deploy the Tachyfy platform. It maintains the specific details from the original README while providing the full architectural overview of the entire system.
