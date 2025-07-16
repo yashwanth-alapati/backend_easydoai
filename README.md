@@ -3,7 +3,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/yashwanth-alapati/backend_tachyfy/badge.svg)](https://coveralls.io/github/yashwanth-alapati/backend_tachyfy)
 
 ## 🌟 High-Level Overview
-
 **Tachyfy** is a sophisticated AI-powered task management platform that leverages a **multi-agent architecture** to intelligently coordinate complex workflows involving email management, calendar scheduling, and real-time information retrieval. Built with modern cloud-native principles, the system uses **FastAPI** as the core backend framework, **Anthropic's Claude 3.5 Haiku** for AI reasoning, and **AWS serverless infrastructure** for scalable tool execution.
 
 ### Core Value Proposition
