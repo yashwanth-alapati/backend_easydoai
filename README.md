@@ -1,4 +1,4 @@
-# t Tachyfy Backend - AI-Powered Task Management Platform
+# Tachyfy Backend - AI-Powered Task Management Platform
 
 [![Coverage Status](https://coveralls.io/repos/github/yashwanth-alapati/backend_tachyfy/badge.svg)](https://coveralls.io/github/yashwanth-alapati/backend_tachyfy)
 
