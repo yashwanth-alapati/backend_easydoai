@@ -71,7 +71,6 @@ User Request → Supervisor → Executor Agent → Service API → Confirmation 
 #### 3. Complex Multi-Step Tasks (research +execution)
 ```
 User Request → Supervisor → Retriever Agent → Research Results → 
-             ↓
 Supervisor → Executor Agent → Action Execution → Confirmation → User
 ```
 
@@ -115,12 +114,12 @@ class ToolLoader:
 
 #### Gmail MCP Tool (`gmail_mcp.py`)
 - **Integration**: Google Gmail API via Lambda
-- **Operations**: Send, read, search, manage emails
+- **Operations**: Send(works now), read, search, manage emails
 - **Security**: OAuth2 with automatic token refresh
 
 #### Google Calendar Tool (`google_calendar.py`)
 - **Integration**: Google Calendar API via Lambda
-- **Operations**: Create, update, list, delete events
+- **Operations**: Create(works now), update, list, delete events
 - **Features**: Multi-calendar support, attendee management
 
 ### 3. Authentication & Authorization System
@@ -240,7 +239,7 @@ class AuthenticationSystem:
 #### Core Application Settings
 ```bash
 # Database Connections
-DATABASE_URL=postgresql://user:password@localhost:5432/tachyfy
+DATABASE_URL=postgresql://user:password@localhost:5432/tachyfy(not for this setup)
 MONGODB_URL=mongodb://localhost:27017/tachyfy_chat
 
 # AI Service Configuration
@@ -382,7 +381,7 @@ flake8 . --max-line-length=88 --ignore=E203,W503 --exclude=env
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
 │  │  │ RDS         │  │ DocumentDB  │  │ DynamoDB    │  │ S3 Buckets  │     │   │
 │  │  │ PostgreSQL  │  │ MongoDB API │  │ Token Store │  │ Static      │     │   │
-│  │  │ Multi-AZ    │  │ Cluster     │  │ Global      │  │ Assets      │     │   │
+│  │  │ ( nope )    │  │ Cluster     │  │ Global      │  │ Assets      │     │   │
 │  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘     │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────────┘
